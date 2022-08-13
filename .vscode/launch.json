@@ -9,7 +9,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/main.exe",
+            "program": "${workspaceFolder}/lhc.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

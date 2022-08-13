@@ -11,7 +11,7 @@
                 "-g",
                 // "-O3",
                 "-o",
-                "main.exe",
+                "lhc.exe",
                 "src\\*.cpp",
                 "src\\**\\*.cpp",
             ],

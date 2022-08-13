@@ -46,7 +46,7 @@ int main()
     FS::write_file("ass/out.ass", Assembler::to_ass(program));
 
     Sim *cpu = new Sim();
-    cpu->execute(program, false);
+    cpu->execute(program, true);
 
     return 0;
 }
