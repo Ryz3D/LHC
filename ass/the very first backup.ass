@@ -1,0 +1,16 @@
+10  -> A        # A=10
+18  -> B        # B=18
+5   -> RAM_P
+ADD -> RAM      # ->5=A+B
+
+INV -> A        # A=-A
+ADD -> A        # A=A+B
+ADD -> A        # A=A+B
+ADD -> RAM_P A  # RP=A=A+B
+123 -> RAM      # ->44=123
+# RP=-10+3*18
+
+RAM_P -> A      # A=44
+0 -> B
+9 -> RAM_P
+ADD -> RAM      # ->9=44
