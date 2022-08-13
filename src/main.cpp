@@ -15,9 +15,6 @@ jumps (label, goto)
 compare by subtract and delta < 0
 instruction pointer in ram at 0x00 (NOR ram_p)
 setting 0x01 redirects to 0x00 if first bit of A
-
-float?
-else?
 */
 
 int main()
