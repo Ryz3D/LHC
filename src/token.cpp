@@ -1,5 +1,12 @@
 #include "token.h"
 
+Token::Token() {}
+
+Token::Token(std::string raw)
+{
+    this->raw = raw;
+}
+
 bool Token::is_supported()
 {
     return false;

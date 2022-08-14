@@ -10,6 +10,7 @@
 class LiteralString : public Token
 {
 public:
+    using Token::Token;
     bool is_supported() override;
     void resolve() override;
     std::string data = "";
@@ -18,6 +19,7 @@ public:
 class LiteralInt : public Token
 {
 public:
+    using Token::Token;
     bool is_supported() override;
     void resolve() override;
     int data = 0;
@@ -26,6 +28,7 @@ public:
 class LiteralChar : public Token
 {
 public:
+    using Token::Token;
     bool is_supported() override;
     void resolve() override;
     char data = 0;
@@ -34,6 +37,7 @@ public:
 class LiteralBool : public Token
 {
 public:
+    using Token::Token;
     bool is_supported() override;
     void resolve() override;
     bool data = 0;

@@ -14,4 +14,5 @@ public:
     void resolve() override;
 
     lhc_type exp_type = lhc_type::INVALID;
+    std::vector<Token *> content = {};
 };

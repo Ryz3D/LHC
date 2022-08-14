@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdint.h>
 #include <iostream>
+#include <string>
 
 #include "instruction.h"
 
@@ -18,4 +18,5 @@ public:
 
     uint8_t A = 0, B = 0, RAM_P = 0;
     uint8_t ram[RAM_SIZE];
+    std::string output_buffer = "";
 };

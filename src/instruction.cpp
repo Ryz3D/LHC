@@ -44,6 +44,8 @@ Instruction *Instruction::parse_ass(std::string str)
                  str[i] == '_')
             cw_buffer += str[i];
     }
+    if (out)
+        return nullptr;
 
     ins->parse_ins_part(out, &has_literal, cw_buffer);
     return ins;
@@ -72,10 +74,13 @@ void Instruction::parse_ins_part(bool out, bool *has_literal, std::string str)
     if (out && !*has_literal)
     {
         bool is_literal = false;
+        bool is_negative = false;
         literal = 0;
         for (size_t j = 0; j < str.size(); j++)
         {
-            if ('0' <= str[j] && str[j] <= '9')
+            if (j == 0 && str[j] == '-')
+                is_negative = true;
+            else if ('0' <= str[j] && str[j] <= '9')
             {
                 is_literal = true;
                 literal *= 10;
@@ -90,6 +95,8 @@ void Instruction::parse_ins_part(bool out, bool *has_literal, std::string str)
         }
         if (is_literal)
         {
+            if (is_negative)
+                literal = 256 - literal;
             nop = false;
             *has_literal = true;
         }
@@ -106,14 +113,6 @@ bool Instruction::literal_out()
 
 std::string Instruction::to_ass()
 {
-    if (nop)
-    {
-        if (comment.size() > 0)
-            return "# " + comment;
-        else
-            return "";
-    }
-
     std::string ass = "";
 
     if ((control_word >> INS_RAM_OUT) & 1)

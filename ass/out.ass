@@ -1,4 +1,21 @@
-1 -> A # i did 1+2 :)
-2 -> B
+6 -> RAM_P
+1 -> RAM A # i did 1+2 :)
+7 -> RAM_P
+2 -> RAM B
 8 -> RAM_P
+ADD -> RAM
+48 -> A
+6 -> RAM_P # load initial A
+RAM -> B
+2 -> RAM_P
+ADD -> RAM
+43 -> RAM
+7 -> RAM_P # load initial B
+RAM -> B
+2 -> RAM_P
+ADD -> RAM
+61 -> RAM
+8 -> RAM_P # load result
+RAM -> B
+2 -> RAM_P
 ADD -> RAM

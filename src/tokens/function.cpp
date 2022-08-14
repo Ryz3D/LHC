@@ -17,14 +17,5 @@ std::vector<Token *> FunctionToken::get_children()
 
 void FunctionToken::resolve()
 {
-    // var_type
-    // var_name
-
-    if (raw != "return 0;")
-    {
-        std::cout << "ERROR: Could not resolve ReturnToken \"" << raw << "\"" << std::endl;
-        return;
-    }
-
     resolved = true;
 }

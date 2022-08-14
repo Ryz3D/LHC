@@ -8,19 +8,19 @@ I fully intend to build a machine capable of executing the generated binaries in
 _(pretty much)_
 
 - Parsing .c files
-- Global variables (`uint_8`, `bool`)
+- Basic variables (`uint_8`, `bool`)
+  - All variables are treated as global for now
 - Custom CPU simulator (and brainfuck, just for fun)
 - Output and parse custom assembly
   - Can be used as an assembly debugger/simulator and assembly->binary converter
+- Output as binary (for EEPROM and LogiSim)
 
 ## TO-DO
 
 - Memory management (allocating and freeing RAM)
-- Output as binary (for EEPROM and LogiSim)
+  - `free` local variables after scope ended
 - Support `if` by conditional jumps
 - Handle `else` by caching result of `if` condition
-- Some output interface, probably in a reserved RAM space
-  - Possibly UART
 
 ## Planned
 

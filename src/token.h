@@ -20,6 +20,9 @@ enum lhc_type
 class Token
 {
 public:
+    Token();
+    Token(std::string raw);
+
     virtual bool is_supported();
     virtual std::vector<Token *> get_children();
     virtual void resolve();

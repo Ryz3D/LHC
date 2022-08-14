@@ -17,6 +17,8 @@ void Sim::execute(std::vector<Instruction *> program, bool debug)
             debug_log();
         }
     }
+    if (debug && output_buffer.size() > 0)
+        std::cout << "OUTPUT: \"" << output_buffer << "\"" << std::endl;
 }
 
 void Sim::execute(Instruction *ins)
@@ -39,10 +41,15 @@ void Sim::execute(Instruction *ins)
 
     if (ins->control_word & (1 << INS_RAM_IN))
     {
-        if (RAM_P != 1)
+        if (RAM_P == 1)
+        {
+            if (A & 0b10000000)
+                ram[0] = bus;
+        }
+        else if (RAM_P == 2)
+            output_buffer += (char)bus;
+        else
             ram[RAM_P] = bus;
-        else if (A & 0b10000000)
-            ram[0] = bus;
     }
     if (ins->control_word & (1 << INS_RAM_P_IN))
         RAM_P = bus;

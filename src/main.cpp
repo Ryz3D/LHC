@@ -8,28 +8,35 @@
 #include "sim.h"
 
 /*
-only global definitions (or save all in global list)
+only global definitions (save all in global list)
 jumps (label, goto)
     != 0
     > 0
 compare by subtract and delta < 0
-instruction pointer in ram at 0x00 (NOR ram_p)
+instruction pointer in ram at 0x00
 setting 0x01 redirects to 0x00 if first bit of A
+output at ram 0x02
+reserve 0x03, then NOR all RAM_P bits but the last 2
 */
+
+void help()
+{
+    std::cout << "Usage: lhc [Options] [Input] [Output]" << std::endl;
+    std::cout << "\tOptions:" << std::endl;
+    std::cout << "\t\t-s Run simulation" << std::endl;
+    std::cout << "\tInput:" << std::endl;
+    std::cout << "\t\t-ic [path] C source file" << std::endl;
+    std::cout << "\t\t-ia [path] Assembly file" << std::endl;
+    std::cout << "\tOutput:" << std::endl;
+    std::cout << "\t\t-oa [path] Assembly file" << std::endl;
+    std::cout << "\t\t-ob [path] Binary file" << std::endl;
+}
 
 int main(int argc, char *argv[])
 {
     if (argc == 1)
     {
-        std::cout << "Usage: lhc [Options] [Input] [Output]" << std::endl;
-        std::cout << "\tOptions:" << std::endl;
-        std::cout << "\t\t-s Run simulation" << std::endl;
-        std::cout << "\tInput:" << std::endl;
-        std::cout << "\t\t-ic [path] C source file" << std::endl;
-        std::cout << "\t\t-ia [path] Assembly file" << std::endl;
-        std::cout << "\tOutput:" << std::endl;
-        std::cout << "\t\t-oa [path] Assembly file" << std::endl;
-        std::cout << "\t\t-ob [path] Binary file" << std::endl;
+        help();
         return 0;
     }
 
@@ -58,34 +65,33 @@ int main(int argc, char *argv[])
     if (in_c.size() > 0)
     {
         std::vector<Token *> tokens = {};
-        err_parse err1 = Parser::parse(FS::read_file("csrc/test.c"), &tokens);
+        err_parse err1 = Parser::parse(FS::read_file(in_c), &tokens);
         if (err1 != err_parse::PARSE_SUCCESS)
         {
-            std::cout << "ERROR: failed parse (" << err1 << ")" << std::endl;
+            std::cout << "ERROR: Failed at parse (" << err1 << ")" << std::endl;
             return err1;
         }
 
         err_resolve err2 = Parser::resolve(tokens);
         if (err2 != err_resolve::RESOLVE_SUCCESS)
         {
-            std::cout << "ERROR: Failed resolve (" << err2 << ")" << std::endl;
+            std::cout << "ERROR: Failed at resolve (" << err2 << ")" << std::endl;
             return err2;
         }
 
         err_compile err3 = Assembler::compile(tokens, &program);
         if (err3 != err_compile::COMPILE_SUCCESS)
         {
-            std::cout << "ERROR: Failed compile (" << err3 << ")" << std::endl;
+            std::cout << "ERROR: Failed at compile (" << err3 << ")" << std::endl;
             return err3;
         }
     }
     else if (in_ass.size() > 0)
-    {
         program = Assembler::parse_ass(FS::read_file(in_ass));
-    }
     else
     {
         std::cout << "ERROR: No input files" << std::endl;
+        help();
         return 1;
     }
 
@@ -104,8 +110,8 @@ int main(int argc, char *argv[])
 
     if (sim)
     {
-        Sim *cpu = new Sim();
-        cpu->execute(program, true);
+        Sim cpu = Sim();
+        cpu.execute(program, true);
     }
 
     std::cout << "LHC Done!" << std::endl;
