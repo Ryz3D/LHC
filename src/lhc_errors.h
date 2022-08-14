@@ -14,6 +14,11 @@ enum err_resolve
     RESOLVE_MISSING
 };
 
+enum err_compile
+{
+    COMPILE_SUCCESS
+};
+
 enum err_assemble
 {
     ASSEMBLE_SUCCESS

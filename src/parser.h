@@ -17,5 +17,5 @@ class Parser
 {
 public:
     static err_parse parse(std::string str, std::vector<Token *> *buffer);
-    static err_resolve resolve(std::vector<Token *> tokens, std::string *buffer);
+    static err_resolve resolve(std::vector<Token *> tokens);
 };

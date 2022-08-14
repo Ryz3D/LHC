@@ -39,10 +39,8 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer)
     return err_parse::PARSE_SUCCESS;
 }
 
-err_resolve Parser::resolve(std::vector<Token *> tokens, std::string *buffer)
+err_resolve Parser::resolve(std::vector<Token *> tokens)
 {
-    buffer->clear();
-
     for (size_t i = 0; i < tokens.size(); i++)
     {
         if (!tokens[i]->is_supported())
@@ -58,28 +56,28 @@ err_resolve Parser::resolve(std::vector<Token *> tokens, std::string *buffer)
     for (size_t i = 0; i < tokens.size(); i++)
     {
         if (dynamic_cast<AssignmentToken *>(tokens[i]) != nullptr)
-            *buffer += "Assignment (" + dynamic_cast<AssignmentToken *>(tokens[i])->var_name + ")";
+            std::cout << "Assignment (" + dynamic_cast<AssignmentToken *>(tokens[i])->var_name + ")";
         else if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
-            *buffer += "Definition (" + dynamic_cast<DefinitionToken *>(tokens[i])->var_name + ")";
+            std::cout << "Definition (" + dynamic_cast<DefinitionToken *>(tokens[i])->var_name + ")";
         else if (dynamic_cast<ExpressionToken *>(tokens[i]) != nullptr)
-            *buffer += "Expression (" + dynamic_cast<ExpressionToken *>(tokens[i])->raw + ")";
+            std::cout << "Expression (" + dynamic_cast<ExpressionToken *>(tokens[i])->raw + ")";
         else if (dynamic_cast<FunctionToken *>(tokens[i]) != nullptr)
-            *buffer += "Function (" + dynamic_cast<FunctionToken *>(tokens[i])->func_name + ")";
+            std::cout << "Function (" + dynamic_cast<FunctionToken *>(tokens[i])->func_name + ")";
         else if (dynamic_cast<IfStatement *>(tokens[i]) != nullptr)
-            *buffer += "If";
+            std::cout << "If";
         else if (dynamic_cast<LiteralString *>(tokens[i]) != nullptr)
-            *buffer += "String (" + dynamic_cast<LiteralString *>(tokens[i])->data + ")";
+            std::cout << "String (" + dynamic_cast<LiteralString *>(tokens[i])->data + ")";
         else if (dynamic_cast<LiteralInt *>(tokens[i]) != nullptr)
-            *buffer += "Int (" + std::to_string(dynamic_cast<LiteralInt *>(tokens[i])->data) + ")";
+            std::cout << "Int (" + std::to_string(dynamic_cast<LiteralInt *>(tokens[i])->data) + ")";
         else if (dynamic_cast<LiteralChar *>(tokens[i]) != nullptr)
-            *buffer += "Char (" + std::to_string(dynamic_cast<LiteralChar *>(tokens[i])->data) + ")";
+            std::cout << "Char (" + std::to_string(dynamic_cast<LiteralChar *>(tokens[i])->data) + ")";
         else if (dynamic_cast<LiteralBool *>(tokens[i]) != nullptr)
-            *buffer += "Bool (" + std::to_string(dynamic_cast<LiteralBool *>(tokens[i])->data) + ")";
+            std::cout << "Bool (" + std::to_string(dynamic_cast<LiteralBool *>(tokens[i])->data) + ")";
         else if (dynamic_cast<ReturnToken *>(tokens[i]) != nullptr)
-            *buffer += "Return";
+            std::cout << "Return";
         else
-            *buffer += "???: " + tokens[i]->raw;
-        *buffer += "\n";
+            std::cout << "???: " + tokens[i]->raw;
+        std::cout << "\n";
     }
 
     return err_resolve::RESOLVE_SUCCESS;

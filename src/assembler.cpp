@@ -1,6 +1,6 @@
 #include "assembler.h"
 
-err_assemble Assembler::assemble(std::vector<Token *> tokens, std::vector<Instruction *> *buffer)
+err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruction *> *buffer)
 {
     buffer->clear();
 
@@ -8,6 +8,17 @@ err_assemble Assembler::assemble(std::vector<Token *> tokens, std::vector<Instru
     buffer->push_back(new Instruction(1 << INS_B_IN, 2));
     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 8));
     buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+    return err_compile::COMPILE_SUCCESS;
+}
+
+err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector<uint8_t> *buffer)
+{
+    buffer->clear();
+
+    buffer->push_back(1);
+    buffer->push_back(2);
+    buffer->push_back(3);
 
     return err_assemble::ASSEMBLE_SUCCESS;
 }

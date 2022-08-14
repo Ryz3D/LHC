@@ -25,3 +25,12 @@ void FS::write_file(std::string path, std::string data)
     fwrite(data.data(), 1, data.size(), f);
     fclose(f);
 }
+
+void FS::write_file(std::string path, std::vector<uint8_t> data)
+{
+    FILE *f = fopen(path.c_str(), "w");
+    if (f == nullptr)
+        std::cout << "ERROR: File \"" << path << "\" could not be written!";
+    fwrite(data.data(), 1, data.size(), f);
+    fclose(f);
+}
