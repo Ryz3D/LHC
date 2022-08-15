@@ -1,14 +1,14 @@
 #include "parser.h"
 
-err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_state state)
+err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser_state state)
 {
-    // TODO: check for assignment, token_buffer.size() > 0 && str[i] == '=' && str[i+1] != '='
-    // check for <= >= != etc. (only in non-expression-state)
+    // check for <= >= != etc. (only in expression state)
     // convert ++ to = [] + 1
     buffer->clear();
 
     lhc_type parsed_type = lhc_type::INVALID;
     std::string token_buffer = "";
+    std::string str = str_in + " ";
     for (size_t i = 0; i < str.size(); i++)
     {
         if (str[i] == '#')
@@ -42,12 +42,17 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
             {
                 if (!Parser::parse_keyword(token_buffer, str, buffer, &i))
                 {
-                    DefinitionToken *def = new DefinitionToken();
-                    if (previous_type != lhc_type::INVALID)
+                    if (state == parser_state::PARSE_EXPRESSION)
+                        buffer->push_back(new VariableToken(token_buffer));
+                    else
                     {
-                        def->var_name = token_buffer;
-                        def->var_type = previous_type;
-                        buffer->push_back(def);
+                        DefinitionToken *def = new DefinitionToken();
+                        if (previous_type != lhc_type::INVALID)
+                        {
+                            def->var_name = token_buffer;
+                            def->var_type = previous_type;
+                            buffer->push_back(def);
+                        }
                     }
                     while ((str[i] == ' ' || str[i] == '\t' || str[i] == '\n') && i < str.size() - 1)
                         i++;
@@ -57,6 +62,7 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
                             return err_parse::PARSE_MULTI_DEF;
                         else if (i < str.size() - 1)
                             i++;
+                        token_buffer.clear();
                     }
                     else if (str[i] == '(')
                     {
@@ -78,7 +84,6 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
                             if (err != err_parse::PARSE_SUCCESS)
                                 return err;
 
-                            token_buffer.clear();
                             buffer->push_back(call);
                         }
                         else // FUNCTION DEFINITION
@@ -108,9 +113,9 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
                             if (err != err_parse::PARSE_SUCCESS)
                                 return err;
 
-                            token_buffer.clear();
                             buffer->push_back(func);
                         }
+                        token_buffer.clear();
                     }
                     else if (str[i] == ':')
                     {
@@ -122,7 +127,12 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
                     else if (str[i] != ';')
                     {
                         if (i >= str.size() - 1)
-                            return err_parse::PARSE_ENDING_ASSIGNMENT;
+                        {
+                            if (state == parser_state::PARSE_PARAMS || state == parser_state::PARSE_EXPRESSION)
+                                break;
+                            else
+                                return err_parse::PARSE_ENDING_ASSIGNMENT;
+                        }
 
                         bool inc = false, dec = false;
                         if (str[i] == '+' && str[i + 1] == '+')
@@ -133,8 +143,16 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
                         {
                             AssignmentToken *assignment = new AssignmentToken();
                             assignment->var_name = token_buffer;
-                            assignment->expression = new ExpressionToken();
+                            assignment->expression = new ExpressionToken(token_buffer + (inc ? "+1" : "-1"));
+                            OperatorToken *op = new OperatorToken();
+                            op->a = new ExpressionToken(token_buffer);
+                            op->a->content.push_back(new VariableToken(token_buffer));
+                            op->op = inc ? "+" : "-";
+                            op->b = new ExpressionToken("1");
+                            op->b->content.push_back(new LiteralInt("1"));
+                            assignment->expression->content.push_back(op);
                             buffer->push_back(assignment);
+
                             while (str[i] != ';' && i < str.size() - 1)
                                 i++;
                             if (i < str.size() - 1)
@@ -162,18 +180,28 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
                                 break;
                             }
 
-                            AssignmentToken *assignment = new AssignmentToken();
-                            assignment->var_name = token_buffer;
-                            assignment->expression = new ExpressionToken();
-                            buffer->push_back(assignment);
-                            while (str[i] != ';' && i < str.size() - 1)
-                                i++;
                             if (i < str.size() - 1)
                                 i++;
+                            while ((str[i] == ' ' || str[i] == '\t' || str[i] == '\n') && i < str.size() - 1)
+                                i++;
+                            size_t exp_start = i;
+                            while (str[i] != ';' && i < str.size() - 1)
+                                i++;
+                            std::string exp_str = str.substr(exp_start, i - exp_start);
+                            if (i < str.size() - 1)
+                                i++;
+
+                            AssignmentToken *assignment = new AssignmentToken();
+                            assignment->var_name = token_buffer;
+                            assignment->expression = new ExpressionToken(exp_str);
+                            err_parse err = Parser::parse(exp_str, &assignment->expression->content, parser_state::PARSE_EXPRESSION);
+                            if (err != err_parse::PARSE_SUCCESS)
+                                return err;
+                            buffer->push_back(assignment);
                         }
                     }
                     else
-                        std::cout << "(" << state << "): " << token_buffer << std::endl;
+                        std::cout << "(" << state << "): " << token_buffer << " " << str[i] << " at " << (int)i << std::endl;
                 }
             }
 
@@ -182,8 +210,7 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
 
         if (state == parser_state::PARSE_ANY || state == parser_state::PARSE_EXPRESSION)
         {
-            // TODO: OPERATORS!
-            // split expressions into math ops until variable/literal
+            // TODO: split expressions into Operators until Variable / Literal
 
             if (str[i] == '"')
             {
@@ -226,64 +253,78 @@ err_parse Parser::parse(std::string str, std::vector<Token *> *buffer, parser_st
     return err_parse::PARSE_SUCCESS;
 }
 
-err_resolve Parser::resolve(std::vector<Token *> tokens)
+err_resolve Parser::resolve(std::vector<Token *> tokens, bool debug)
 {
     for (size_t i = 0; i < tokens.size(); i++)
     {
-        if (!tokens[i]->is_supported())
-            return err_resolve::RESOLVE_NOT_SUPPORTED;
         if (!tokens[i]->resolved)
         {
             tokens[i]->resolve();
             if (!tokens[i]->resolved)
                 return err_resolve::RESOLVE_MISSING;
-            // TODO: recursively resolve children
+            if (!tokens[i]->is_supported())
+                return err_resolve::RESOLVE_NOT_SUPPORTED;
+
+            std::vector<Token *> children = tokens[i]->get_children();
+            if (children.size() > 0)
+            {
+                err_resolve err = Parser::resolve(children);
+                if (err != err_resolve::RESOLVE_SUCCESS)
+                    return err;
+            }
         }
     }
 
-    for (size_t i = 0; i < tokens.size(); i++)
+    if (debug)
     {
-        if (dynamic_cast<AssignmentToken *>(tokens[i]) != nullptr)
-            std::cout << "Assignment (" + dynamic_cast<AssignmentToken *>(tokens[i])->var_name + ")";
-        else if (dynamic_cast<CallToken *>(tokens[i]) != nullptr)
-            std::cout << "Call (" + dynamic_cast<CallToken *>(tokens[i])->func_name + ")";
-        else if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
-            std::cout << "Definition (" + dynamic_cast<DefinitionToken *>(tokens[i])->var_name + ")";
-        else if (dynamic_cast<ExpressionToken *>(tokens[i]) != nullptr)
-            std::cout << "Expression (" + dynamic_cast<ExpressionToken *>(tokens[i])->raw + ")";
-        else if (dynamic_cast<FunctionToken *>(tokens[i]) != nullptr)
+        for (size_t i = 0; i < tokens.size(); i++)
         {
-            std::cout << "Function (" + dynamic_cast<FunctionToken *>(tokens[i])->func_name + ")" << std::endl;
-            std::cout << "PARAMS" << std::endl;
-            err_resolve err = Parser::resolve(dynamic_cast<FunctionToken *>(tokens[i])->params);
-            if (err != err_resolve::RESOLVE_SUCCESS)
-                return err;
-            std::cout << "/PARAMS" << std::endl;
-            std::cout << "BODY" << std::endl;
-            err = Parser::resolve(dynamic_cast<FunctionToken *>(tokens[i])->body);
-            if (err != err_resolve::RESOLVE_SUCCESS)
-                return err;
-            std::cout << "/BODY" << std::endl;
+            if (dynamic_cast<AssignmentToken *>(tokens[i]) != nullptr)
+            {
+                std::cout << "Assignment (" + dynamic_cast<AssignmentToken *>(tokens[i])->var_name + "=";
+                std::cout << dynamic_cast<AssignmentToken *>(tokens[i])->expression->raw << ")";
+            }
+            else if (dynamic_cast<CallToken *>(tokens[i]) != nullptr)
+            {
+                std::cout << "Call (" + dynamic_cast<CallToken *>(tokens[i])->func_name + " with";
+                if (dynamic_cast<CallToken *>(tokens[i])->args.size() > 0)
+                    std::cout << " " << dynamic_cast<CallToken *>(tokens[i])->args[0]->raw << ")";
+                else
+                    std::cout << "out)";
+            }
+            else if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
+                std::cout << "Definition (" + dynamic_cast<DefinitionToken *>(tokens[i])->var_name + ")";
+            else if (dynamic_cast<ExpressionToken *>(tokens[i]) != nullptr)
+                std::cout << "Expression (" + dynamic_cast<ExpressionToken *>(tokens[i])->raw + ")";
+            else if (dynamic_cast<FunctionToken *>(tokens[i]) != nullptr)
+            {
+                std::cout << "Function (" + dynamic_cast<FunctionToken *>(tokens[i])->func_name + ")" << std::endl;
+                std::cout << "BODY" << std::endl;
+                err_resolve err = Parser::resolve(dynamic_cast<FunctionToken *>(tokens[i])->body, true);
+                if (err != err_resolve::RESOLVE_SUCCESS)
+                    return err;
+                std::cout << "/BODY" << std::endl;
+            }
+            else if (dynamic_cast<GotoToken *>(tokens[i]) != nullptr)
+                std::cout << "Goto (" + dynamic_cast<GotoToken *>(tokens[i])->label + ")";
+            else if (dynamic_cast<IfStatement *>(tokens[i]) != nullptr)
+                std::cout << "If";
+            else if (dynamic_cast<LabelToken *>(tokens[i]) != nullptr)
+                std::cout << "Label (" + dynamic_cast<LabelToken *>(tokens[i])->label + ")";
+            else if (dynamic_cast<LiteralString *>(tokens[i]) != nullptr)
+                std::cout << "String (" + dynamic_cast<LiteralString *>(tokens[i])->data + ")";
+            else if (dynamic_cast<LiteralInt *>(tokens[i]) != nullptr)
+                std::cout << "Int (" + std::to_string(dynamic_cast<LiteralInt *>(tokens[i])->data) + ")";
+            else if (dynamic_cast<LiteralChar *>(tokens[i]) != nullptr)
+                std::cout << "Char (" + std::to_string(dynamic_cast<LiteralChar *>(tokens[i])->data) + ")";
+            else if (dynamic_cast<LiteralBool *>(tokens[i]) != nullptr)
+                std::cout << "Bool (" + std::to_string(dynamic_cast<LiteralBool *>(tokens[i])->data) + ")";
+            else if (dynamic_cast<ReturnToken *>(tokens[i]) != nullptr)
+                std::cout << "Return";
+            else
+                std::cout << "???: " + tokens[i]->raw;
+            std::cout << std::endl;
         }
-        else if (dynamic_cast<GotoToken *>(tokens[i]) != nullptr)
-            std::cout << "Goto (" + dynamic_cast<GotoToken *>(tokens[i])->label + ")";
-        else if (dynamic_cast<IfStatement *>(tokens[i]) != nullptr)
-            std::cout << "If";
-        else if (dynamic_cast<LabelToken *>(tokens[i]) != nullptr)
-            std::cout << "Label (" + dynamic_cast<LabelToken *>(tokens[i])->label + ")";
-        else if (dynamic_cast<LiteralString *>(tokens[i]) != nullptr)
-            std::cout << "String (" + dynamic_cast<LiteralString *>(tokens[i])->data + ")";
-        else if (dynamic_cast<LiteralInt *>(tokens[i]) != nullptr)
-            std::cout << "Int (" + std::to_string(dynamic_cast<LiteralInt *>(tokens[i])->data) + ")";
-        else if (dynamic_cast<LiteralChar *>(tokens[i]) != nullptr)
-            std::cout << "Char (" + std::to_string(dynamic_cast<LiteralChar *>(tokens[i])->data) + ")";
-        else if (dynamic_cast<LiteralBool *>(tokens[i]) != nullptr)
-            std::cout << "Bool (" + std::to_string(dynamic_cast<LiteralBool *>(tokens[i])->data) + ")";
-        else if (dynamic_cast<ReturnToken *>(tokens[i]) != nullptr)
-            std::cout << "Return";
-        else
-            std::cout << "???: " + tokens[i]->raw;
-        std::cout << std::endl;
     }
 
     return err_resolve::RESOLVE_SUCCESS;

@@ -1,10 +1,34 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <string>
 
-#include "instruction.h"
+#include "lhc_errors.h"
 #include "token.h"
+#include "tokens/assignment.h"
+#include "tokens/call.h"
+#include "tokens/definition.h"
+#include "tokens/expression.h"
+#include "tokens/function.h"
+#include "tokens/goto.h"
+#include "tokens/if.h"
+#include "tokens/label.h"
+#include "tokens/literals.h"
+#include "tokens/operator.h"
+#include "tokens/return.h"
+#include "tokens/variable.h"
+
+#include "instruction.h"
+
+class Variable
+{
+public:
+    Variable(lhc_type var_type, std::string var_name, uint32_t ram_location);
+    lhc_type var_type;
+    std::string var_name;
+    uint32_t ram_location;
+};
 
 class Assembler
 {

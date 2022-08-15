@@ -22,7 +22,9 @@ enum err_resolve
 
 enum err_compile
 {
-    COMPILE_SUCCESS
+    COMPILE_SUCCESS,
+    COMPILE_NO_MAIN, // no main function found
+    COMPILE_NO_EXIT  // main function does not end with return
 };
 
 enum err_assemble

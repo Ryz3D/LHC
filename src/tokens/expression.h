@@ -10,6 +10,7 @@
 class ExpressionToken : public Token
 {
 public:
+    using Token::Token;
     bool is_supported() override;
     void resolve() override;
 

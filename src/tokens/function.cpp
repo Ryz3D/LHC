@@ -17,5 +17,11 @@ std::vector<Token *> FunctionToken::get_children()
 
 void FunctionToken::resolve()
 {
+    if (func_name != "main")
+    {
+        std::cout << "ERROR: Only void main() function is allowed" << std::endl;
+        return;
+    }
+
     resolved = true;
 }

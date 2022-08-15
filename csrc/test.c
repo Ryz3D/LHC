@@ -2,13 +2,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-int i;
+int i = 2;
 
-int main(bool yo, int two)
+int main()
 {
     uint8_t imabyte = 2;
     i = 'A';
-    p = "Welt seid mir gegruesst!";
 
 inc:
     putchar(i);

@@ -8,11 +8,6 @@ bool ExpressionToken::is_supported()
 
 void ExpressionToken::resolve()
 {
-    if (raw != "return 0;")
-    {
-        std::cout << "ERROR: Could not resolve ExpressionToken \"" << raw << "\"" << std::endl;
-        return;
-    }
-
+    // TODO: resolve exp_type
     resolved = true;
 }

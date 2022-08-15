@@ -15,10 +15,11 @@ jumps (label, goto)
 compare by subtract and delta < 0
 delta == 0 if delta < 0 after --
 delta = -128 if delta > 0 after --
-ram bank select at 0x00
-instruction pointer in ram at 0x01
-setting 0x02 redirects to 0x01 if first bit of A
-output at ram 0x03
+0x00 reserved
+0x01/0x02 instruction pointer
+0x03/0x04 set redirects to 0x01 if first bit of A
+ ABOVE ARE APPLIED WHEN LOWER (LAST) BYTE IS SET
+0x05 putchar/getchar IO
 NOR first 6 RAM_P bits for RAM_CE
 */
 

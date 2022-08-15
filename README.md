@@ -21,11 +21,17 @@ _(pretty much)_
   - `free` local variables after scope ended
 - Support `if` by conditional jumps
 - Handle `else` by caching result of `if` condition
-- `print_uint` function for multiple digits
-- `print_int` function for negative sign
+- Native `print_uint` function for multiple digits
+- Native `print_int` function for negative sign
+- Proper error messages (show problematic line/keyword)
 
 ## Planned
 
 - Actual loops (`while`, `for`)
 - At least other integer types (8-32bit + signed `int`s)
 - Support as many logical operators as possible
+
+## _(notes for version two)_
+
+- Simpler tokenization, separate from parsing
+  - Only keywords and names

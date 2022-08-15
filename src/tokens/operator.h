@@ -6,13 +6,16 @@
 
 #include "../lhc_errors.h"
 #include "../token.h"
-#include "assignment.h"
+#include "expression.h"
 
-class DefinitionToken : public Token
+class OperatorToken : public Token
 {
 public:
     bool is_supported() override;
     void resolve() override;
-    lhc_type var_type = lhc_type::INVALID;
-    std::string var_name = "";
+
+    std::string op = "";
+    lhc_type op_type = lhc_type::INVALID;
+    ExpressionToken *a = nullptr;
+    ExpressionToken *b = nullptr;
 };
