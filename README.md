@@ -1,4 +1,4 @@
-# The _Large Hadron Compiler_
+# The _Large Headache Compiler_
 
 It's not really large, this project generates assembly and machine code for a little computer with a very limited instruction set. As a source it targets a subset of C.
 I fully intend to build a machine capable of executing the generated binaries in hardware, but time will tell if I'm actually able to.
