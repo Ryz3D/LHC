@@ -8,19 +8,29 @@
 #include "sim.h"
 
 /*
-only global definitions (save all in global list)
+ACUTE TODO:
+ - assignment
+ - expressions
+ - operator (order)
+ - comments
+ - literal resolve() not called
+ - labels
+
 jumps (label, goto)
     != 0
     > 0
 compare by subtract and delta < 0
 delta == 0 if delta < 0 after --
 delta = -128 if delta > 0 after --
+
 0x00 reserved
 0x01/0x02 instruction pointer
-0x03/0x04 set redirects to 0x01 if first bit of A
+0x03/0x04 redirects to 0x01/0x02 if first bit of A (A < 0)
  ABOVE ARE APPLIED WHEN LOWER (LAST) BYTE IS SET
 0x05 putchar/getchar IO
-NOR first 6 RAM_P bits for RAM_CE
+0x06/0x07 reserved
+
+NOR first few RAM_P bits for RAM_CE
 */
 
 void help()

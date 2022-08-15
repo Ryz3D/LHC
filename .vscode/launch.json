@@ -11,7 +11,7 @@
             "preLaunchTask": "build LHC",
             "program": "${workspaceFolder}/lhc.exe",
             "args": [
-                // "-s",
+                "-s",
                 "-ic",
                 "csrc/test.c",
                 "-oa",

@@ -1,3 +1,11 @@
+9 -> RAM_P
+0 -> RAM
+10 -> RAM_P
+0 -> RAM
+9 -> RAM_P
+0 -> RAM
+9 -> RAM_P
+RAM -> A
+0 -> B
 5 -> RAM_P
-4 -> RAM_P
-4 -> RAM_P
+ADD -> RAM

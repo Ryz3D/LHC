@@ -78,11 +78,12 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                             std::string args = str.substr(args_start, i - args_start);
                             CallToken *call = new CallToken(token_buffer + "(" + args + ")");
                             call->func_name = token_buffer;
-
+                            ExpressionToken *exp = new ExpressionToken(args);
                             // TODO: multiple arguments, split by comma and parse each as expression
-                            err_parse err = Parser::parse(args, &call->args, parser_state::PARSE_EXPRESSION);
+                            err_parse err = Parser::parse(args, &exp->content, parser_state::PARSE_EXPRESSION);
                             if (err != err_parse::PARSE_SUCCESS)
                                 return err;
+                            call->args.push_back(exp);
 
                             buffer->push_back(call);
                         }
@@ -236,6 +237,8 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
             {
                 if (str[i == 0 ? 0 : (i - 1)] == '-')
                     token_buffer.push_back('-');
+                if (i < str.size() - 1)
+                    i++;
                 while (str[i] >= '0' && str[i] <= '9' && i < str.size() - 1)
                     token_buffer.push_back(str[i++]);
 

@@ -30,6 +30,10 @@ _(pretty much)_
 - Actual loops (`while`, `for`)
 - At least other integer types (8-32bit + signed `int`s)
 - Support as many logical operators as possible
+- Simple optimizations on assembly
+  - Setting `RAM_P` multiple times before accessing RAM
+  - No bus-reads -> nop
+- Custom functions
 
 ## _(notes for version two)_
 
