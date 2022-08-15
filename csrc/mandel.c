@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 int x;
 int y;
 int z1;

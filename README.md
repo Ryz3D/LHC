@@ -21,6 +21,8 @@ _(pretty much)_
   - `free` local variables after scope ended
 - Support `if` by conditional jumps
 - Handle `else` by caching result of `if` condition
+- `print_uint` function for multiple digits
+- `print_int` function for negative sign
 
 ## Planned
 

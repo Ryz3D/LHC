@@ -10,7 +10,7 @@ void ExpressionToken::resolve()
 {
     if (raw != "return 0;")
     {
-        std::cout << "ERROR: Could not resolve ReturnToken \"" << raw << "\"" << std::endl;
+        std::cout << "ERROR: Could not resolve ExpressionToken \"" << raw << "\"" << std::endl;
         return;
     }
 

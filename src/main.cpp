@@ -13,10 +13,13 @@ jumps (label, goto)
     != 0
     > 0
 compare by subtract and delta < 0
-instruction pointer in ram at 0x00
-setting 0x01 redirects to 0x00 if first bit of A
-output at ram 0x02
-reserve 0x03, then NOR all RAM_P bits but the last 2
+delta == 0 if delta < 0 after --
+delta = -128 if delta > 0 after --
+ram bank select at 0x00
+instruction pointer in ram at 0x01
+setting 0x02 redirects to 0x01 if first bit of A
+output at ram 0x03
+NOR first 6 RAM_P bits for RAM_CE
 */
 
 void help()

@@ -7,11 +7,11 @@ bool GotoToken::is_supported()
 
 void GotoToken::resolve()
 {
-    if (raw != "return 0;")
+    if (raw.substr(0, 5) != "goto ")
     {
-        std::cout << "ERROR: Could not resolve ReturnToken \"" << raw << "\"" << std::endl;
+        std::cout << "ERROR: Could not resolve GotoToken \"" << raw << "\"" << std::endl;
         return;
     }
-
+    label = raw.substr(5, raw.length() - 6);
     resolved = true;
 }

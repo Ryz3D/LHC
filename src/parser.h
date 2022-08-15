@@ -9,8 +9,10 @@
 #include "tokens/call.h"
 #include "tokens/definition.h"
 #include "tokens/function.h"
+#include "tokens/goto.h"
 #include "tokens/if.h"
 #include "tokens/expression.h"
+#include "tokens/label.h"
 #include "tokens/literals.h"
 #include "tokens/return.h"
 
@@ -28,4 +30,8 @@ class Parser
 public:
     static err_parse parse(std::string str, std::vector<Token *> *buffer, parser_state state = parser_state::PARSE_TOP_LEVEL);
     static err_resolve resolve(std::vector<Token *> tokens);
+
+private:
+    static lhc_type parse_type(std::string str);
+    static bool parse_keyword(std::string kw, std::string str, std::vector<Token *> *buffer, size_t *i);
 };

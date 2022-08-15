@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(Windows) Starten",
+            "name": "debug LHC",
             "type": "cppvsdbg",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build LHC",
             "program": "${workspaceFolder}/lhc.exe",
             "args": [
                 // "-s",
@@ -19,6 +19,18 @@
                 "-ob",
                 "bin/out.bin",
             ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "debug file",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "preLaunchTask": "build file",
+            "program": "bin\\${fileBasenameNoExtension}.exe",
+            "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

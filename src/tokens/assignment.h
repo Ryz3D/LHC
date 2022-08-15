@@ -15,5 +15,5 @@ public:
     std::vector<Token *> get_children() override;
     void resolve() override;
     std::string var_name;
-    ExpressionToken expression;
+    ExpressionToken *expression;
 };

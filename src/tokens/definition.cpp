@@ -15,14 +15,5 @@ std::vector<Token *> DefinitionToken::get_children()
 
 void DefinitionToken::resolve()
 {
-    // var_type
-    // var_name
-
-    if (raw != "return 0;")
-    {
-        std::cout << "ERROR: Could not resolve ReturnToken \"" << raw << "\"" << std::endl;
-        return;
-    }
-
     resolved = true;
 }

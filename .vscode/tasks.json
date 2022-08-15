@@ -5,7 +5,7 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "build",
+            "label": "build LHC",
             "command": "g++",
             "args": [
                 "-g",
@@ -14,6 +14,24 @@
                 "lhc.exe",
                 "src\\*.cpp",
                 "src\\**\\*.cpp",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "cppbuild",
+            "label": "build file",
+            "command": "g++",
+            "args": [
+                "-g",
+                "-o",
+                "bin\\${fileBasenameNoExtension}.exe",
+                "${relativeFile}"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"
