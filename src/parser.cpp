@@ -283,10 +283,7 @@ err_resolve Parser::resolve(std::vector<Token *> tokens, bool debug)
         for (size_t i = 0; i < tokens.size(); i++)
         {
             if (dynamic_cast<AssignmentToken *>(tokens[i]) != nullptr)
-            {
-                std::cout << "Assignment (" + dynamic_cast<AssignmentToken *>(tokens[i])->var_name + "=";
-                std::cout << dynamic_cast<AssignmentToken *>(tokens[i])->expression->raw << ")";
-            }
+                std::cout << "Assignment (" << dynamic_cast<AssignmentToken *>(tokens[i])->var_name << "=" << dynamic_cast<AssignmentToken *>(tokens[i])->expression->raw << ")";
             else if (dynamic_cast<CallToken *>(tokens[i]) != nullptr)
             {
                 std::cout << "Call (" + dynamic_cast<CallToken *>(tokens[i])->func_name + " with";
@@ -298,7 +295,7 @@ err_resolve Parser::resolve(std::vector<Token *> tokens, bool debug)
             else if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
                 std::cout << "Definition (" + dynamic_cast<DefinitionToken *>(tokens[i])->var_name + ")";
             else if (dynamic_cast<ExpressionToken *>(tokens[i]) != nullptr)
-                std::cout << "Expression (" + dynamic_cast<ExpressionToken *>(tokens[i])->raw + ")";
+                std::cout << "Expression (" + dynamic_cast<ExpressionToken *>(tokens[i])->raw + ") ";
             else if (dynamic_cast<FunctionToken *>(tokens[i]) != nullptr)
             {
                 std::cout << "Function (" + dynamic_cast<FunctionToken *>(tokens[i])->func_name + ")" << std::endl;

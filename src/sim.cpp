@@ -8,17 +8,19 @@ Sim::Sim()
 
 void Sim::execute(std::vector<Instruction *> program, bool debug)
 {
-    for (size_t step = 0; step < 100 && ram[0] < program.size(); step++)
+    uint16_t ip;
+    for (size_t step = 0; step < 100 && (ip = ((uint16_t)ram[0x01] << 8) | ram[0x02]) < program.size(); step++)
     {
-        execute(program[ram[0]++]);
+        execute(program[ip]);
         if (debug)
         {
             std::cout << "[" << (int)step << "] ";
             debug_log();
         }
+        ip++;
+        ram[0x01] = ip >> 8;
+        ram[0x02] = ip & 0xFF;
     }
-    if (debug && output_buffer.size() > 0)
-        std::cout << "OUTPUT: \"" << output_buffer << "\"" << std::endl;
 }
 
 void Sim::execute(Instruction *ins)
@@ -41,12 +43,20 @@ void Sim::execute(Instruction *ins)
 
     if (ins->control_word & (1 << INS_RAM_IN))
     {
-        if (RAM_P == 1)
+        if (RAM_P == 0x02)
+        {
+            ram[0x01] = ram[0x01];
+            ram[0x02] = bus;
+        }
+        else if (RAM_P == 0x04)
         {
             if (A & 0b10000000)
-                ram[0] = bus;
+            {
+                ram[0x01] = ram[0x03];
+                ram[0x02] = bus;
+            }
         }
-        else if (RAM_P == 2)
+        else if (RAM_P == 0x05)
             output_buffer += (char)bus;
         else
             ram[RAM_P] = bus;
@@ -61,7 +71,15 @@ void Sim::execute(Instruction *ins)
 
 void Sim::debug_log()
 {
-    std::cout << "A: " << (int)A << " B: " << (int)B << " RP: " << (int)RAM_P << " IP: " << (int)ram[0] << std::endl
+    std::cout << "A: " << (int)A
+              << " B: " << (int)B
+              << " RP: " << (int)RAM_P
+              << " IP: " << (int)((uint16_t)ram[0x01] << 8 | ram[0x02]);
+
+    if (output_buffer.size() > 0)
+        std::cout << " OUT: \"" << output_buffer << "\"";
+
+    std::cout << std::endl
               << "RAM: ";
     for (size_t i = 0; i < 10; i++)
         std::cout << (i == 0 ? "" : "     ") << (i < 10 ? "0" : "") << (int)i << ": " << (int)ram[i] << std::endl;

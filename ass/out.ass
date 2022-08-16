@@ -1,11 +1,65 @@
-9 -> RAM_P
-0 -> RAM
+10 -> RAM_P # i
+2 -> RAM
+11 -> RAM_P # imabyte
+2 -> RAM
+10 -> RAM_P # i
+65 -> RAM
 10 -> RAM_P
-0 -> RAM
-9 -> RAM_P
-0 -> RAM
-9 -> RAM_P
 RAM -> A
 0 -> B
-5 -> RAM_P
+5 -> RAM_P # putchar
+ADD -> RAM
+10 -> RAM_P
+RAM -> A
+0 -> B
+8 -> RAM_P
+ADD -> RAM
+9 -> RAM_P
+1 -> RAM
+8 -> RAM_P
+RAM -> B
+9 -> RAM_P
+RAM -> A
+10 -> RAM_P # i
+ADD -> RAM
+10 -> RAM_P
+RAM -> A
+0 -> B
+5 -> RAM_P # putchar
+ADD -> RAM
+10 -> RAM_P
+RAM -> A
+0 -> B
+8 -> RAM_P
+ADD -> RAM
+9 -> RAM_P
+1 -> RAM
+8 -> RAM_P
+RAM -> B
+9 -> RAM_P
+RAM -> A
+10 -> RAM_P # i
+ADD -> RAM
+10 -> RAM_P
+RAM -> A
+0 -> B
+5 -> RAM_P # putchar
+ADD -> RAM
+10 -> RAM_P
+RAM -> A
+0 -> B
+8 -> RAM_P
+ADD -> RAM
+9 -> RAM_P
+1 -> RAM
+8 -> RAM_P
+RAM -> B
+9 -> RAM_P
+RAM -> A
+10 -> RAM_P # i
+ADD -> RAM
+10 -> RAM_P
+RAM -> A
+0 -> B
+5 -> RAM_P # putchar
 ADD -> RAM

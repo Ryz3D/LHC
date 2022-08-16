@@ -6,6 +6,11 @@ bool ExpressionToken::is_supported()
     return true;
 }
 
+std::vector<Token *> ExpressionToken::get_children()
+{
+    return content;
+}
+
 void ExpressionToken::resolve()
 {
     // TODO: resolve exp_type
