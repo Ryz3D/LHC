@@ -9,9 +9,10 @@
             "type": "cppvsdbg",
             "request": "launch",
             "preLaunchTask": "build LHC",
-            "program": "${workspaceFolder}/lhc.exe",
+            "program": "${workspaceFolder}\\lhc_debug.exe",
             "args": [
                 "-s",
+                "500",
                 "-ic",
                 "csrc/test.c",
                 "-oa",

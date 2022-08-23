@@ -9,19 +9,14 @@
 
 /*
 ACUTE TODO:
- - assignment
- - expressions
  - operator (order)
- - comments
- - literal resolve() not called
- - labels
-
-jumps (label, goto)
-    != 0
-    > 0
-compare by subtract and delta < 0
-delta == 0 if delta < 0 after --
-delta = -128 if delta > 0 after --
+ - if parse
+ - inline if
+ - return value from calltoken
+ - convert mandel.c to mandel2.c
+  - only int8_t
+  - smaller area, constant y
+  - split operations if not implemented by then
 
 0x00 reserved
 0x01/0x02 instruction pointer
@@ -37,7 +32,7 @@ void help()
 {
     std::cout << "Usage: lhc [Options] [Input] [Output]" << std::endl;
     std::cout << "\tOptions:" << std::endl;
-    std::cout << "\t\t-s Run simulation" << std::endl;
+    std::cout << "\t\t-s [steps || 200] Run simulation" << std::endl;
     std::cout << "\tInput:" << std::endl;
     std::cout << "\t\t-ic [path] C source file" << std::endl;
     std::cout << "\t\t-ia [path] Assembly file" << std::endl;
@@ -54,7 +49,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    bool sim = false;
+    size_t sim_steps = 0;
     std::string in_c = "";
     std::string in_ass = "";
     std::string out_ass = "";
@@ -63,7 +58,12 @@ int main(int argc, char *argv[])
     {
         std::string a = std::string(argv[i]);
         if (a == "-s")
-            sim = true;
+        {
+            sim_steps = 200;
+            if (i < argc - 1)
+                if (argv[i + 1][0] >= '0' && argv[i + 1][0] <= '9')
+                    sim_steps = std::stoi(argv[i + 1]);
+        }
         else if (a == "-ic" && i < argc - 1)
             in_c = argv[i + 1];
         else if (a == "-ia" && i < argc - 1)
@@ -122,10 +122,10 @@ int main(int argc, char *argv[])
     if (out_bin.size() > 0)
         FS::write_file(out_bin, binary);
 
-    if (sim)
+    if (sim_steps > 0)
     {
         Sim cpu = Sim();
-        cpu.execute(program, true);
+        cpu.execute(program, sim_steps, true);
     }
 
     std::cout << "LHC Done!" << std::endl;

@@ -53,13 +53,13 @@ foriter:
     putchar('#');
 
 outend:
-    x = x + 1;
+    x += 1;
     if (x < 50)
         goto forx;
 
     putchar('\n');
 
-    y = y + 2;
+    y += 2;
     if (y < 200)
         goto fory;
 

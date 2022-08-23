@@ -16,7 +16,9 @@
 class Instruction
 {
 public:
-    Instruction(uint8_t control_word, uint16_t literal = 0, std::string comment = "");
+    Instruction(std::string label);
+    Instruction(uint8_t control_word, uint8_t literal = 0, std::string comment = "");
+    Instruction(uint8_t control_word, std::string label_literal, std::string comment = "");
 
     static Instruction *parse_ass(std::string str);
     static uint8_t parse_cw(bool out, std::string cw);
@@ -24,8 +26,9 @@ public:
     bool literal_out();
     std::string to_ass();
 
-    bool nop = true;
     uint8_t control_word = 0;
-    uint16_t literal = 0;
+    uint8_t literal = 0;
+    std::string label_literal = "";
+    std::string label = "";
     std::string comment = "";
 };

@@ -9,7 +9,25 @@
             "command": "g++",
             "args": [
                 "-g",
-                // "-O3",
+                "-o",
+                "lhc_debug.exe",
+                "src\\*.cpp",
+                "src\\**\\*.cpp",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "cppbuild",
+            "label": "build release LHC",
+            "command": "g++",
+            "args": [
+                "-O3",
                 "-o",
                 "lhc.exe",
                 "src\\*.cpp",
@@ -39,6 +57,36 @@
             "problemMatcher": [
                 "$gcc"
             ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "run with LHC (.c)",
+            "command": "lhc",
+            "args": [
+                "-s",
+                "-ic",
+                "${relativeFile}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "run with LHC (.ass)",
+            "command": "lhc",
+            "args": [
+                "-s",
+                "-ia",
+                "${relativeFile}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
             "group": "build"
         }
     ]

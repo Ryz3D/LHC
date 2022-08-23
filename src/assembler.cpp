@@ -12,10 +12,12 @@ Variable *Assembler::find_var(std::string var_name, std::vector<Variable *> vars
     for (size_t i = 0; i < vars.size(); i++)
         if (var_name == vars[i]->var_name)
             return vars[i];
+
     return nullptr;
 }
 
-// TODO: use two reserved addresses for operators?
+uint32_t Assembler::label_counter = 0;
+
 err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, std::string comment)
 {
     if (exp->content.size() > 0)
@@ -50,9 +52,18 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
         else if (dynamic_cast<OperatorToken *>(exp->content[0]) != nullptr)
         {
             OperatorToken *op = dynamic_cast<OperatorToken *>(exp->content[0]);
-            // TODO: mul/div
+
             // TODO: multiple res vars or something? dynamic?
             //  -> if b is an op again, RAM_EXP_RES1 would be overwritten
+            // are two per operand -> 4 enough?
+            //  -> probably
+
+            // TODO: try simplifying evaluation of operands
+            //  -> if b is literal, [Literal] -> B would be possible
+            //  -> if b is variable, RAM -> B would be possible
+            //  -> if b is operator, we have a problem
+            // if alu is required again, don't immediately load (can be ignored if resolved bottom-top)
+
             err_compile err = evaluate_exp(op->a, vars, buffer, RAM_EXP_RES1);
             if (err != err_compile::COMPILE_SUCCESS)
                 return err;
@@ -60,17 +71,132 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             if (err != err_compile::COMPILE_SUCCESS)
                 return err;
 
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES1));
-            buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES2));
-            buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
-            if (op->op == "-")
+            if (op->op == "+" || op->op == "-")
+            {
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES1));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES2));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
+                if (op->op == "-")
+                    buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN)); // Invert A if neccessary
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));     // Add into target
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+            }
+            else if (op->op == "*" || op->op == "/")
+            {
+                // TODO
+                std::cout << "WARNING: " << op->op << " ignored";
+            }
+            else if (op->op == "<" || op->op == ">" || op->op == "<=" || op->op == ">=" || op->op == "==")
+            {
+                std::string l_true = op->op + std::to_string(label_counter) + "true";
+                std::string l_false = op->op + std::to_string(label_counter++) + "false";
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES1));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES2));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
                 buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));
-            buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN, 0, "delta (" + op->raw + ")"));
+                buffer->push_back(new Instruction(1 << INS_B_IN, 0));
+
+                if (op->op == "==")
+                {
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+
+                    buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN, 0, "-delta"));
+
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+
+                    buffer->push_back(new Instruction(l_false));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0));
+
+                    buffer->push_back(new Instruction(l_true));
+                }
+
+                if (op->op == "==" || op->op == "!=")
+                {
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+
+                    buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN, 0, "-delta"));
+
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+
+                    buffer->push_back(new Instruction(l_true));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1));
+
+                    buffer->push_back(new Instruction(l_false));
+                }
+
+                if (op->op == ">" || op->op == ">=")
+                    buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN, 0, "-delta"));
+                if (op->op == "<" || op->op == "<=" || op->op == ">" || op->op == ">=")
+                {
+                    if (op->op == "<=" || op->op == ">=")
+                    {
+                        buffer->push_back(new Instruction(1 << INS_B_IN, 0xFF));
+                        buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN, 0, "delta - 1"));
+                    }
+
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
+
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
+
+                    buffer->push_back(new Instruction(l_true));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1));
+
+                    buffer->push_back(new Instruction(l_false));
+                }
+            }
+            else if (op->op == "||" || op->op == "&&")
+            {
+                // TODO
+                std::cout << "WARNING: " << op->op << " ignored";
+            }
+            else
+                return err_compile::COMPILE_ILLEGAL_OP;
         }
+        else if (dynamic_cast<ExpressionToken *>(exp->content[0]) != nullptr)
+            std::cout << "Nested expression in \"" << exp->content[0]->raw << "\", please investigate" << std::endl;
         else
-            std::cout << "i cant eval " << exp->content[0]->raw << " yet" << std::endl;
+            std::cout << "Can't evaluate \"" << exp->content[0]->raw << "\" (yet)" << std::endl;
     }
 
     return err_compile::COMPILE_SUCCESS;
@@ -79,6 +205,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruction *> *buffer)
 {
     buffer->clear();
+    Assembler::label_counter = 0;
 
     FunctionToken *main = nullptr;
     std::vector<DefinitionToken *> var_defs = {};
@@ -174,43 +301,32 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
                 return err_compile::COMPILE_UNDEF_FUNC;
         }
         else if (dynamic_cast<LabelToken *>(main->body[i]) != nullptr)
-            ; // TODO
+        {
+            buffer->push_back(new Instruction(dynamic_cast<LabelToken *>(main->body[i])->label));
+        }
         else if (dynamic_cast<GotoToken *>(main->body[i]) != nullptr)
-            ; // TODO
+        {
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<GotoToken *>(main->body[i])->label));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<GotoToken *>(main->body[i])->label));
+        }
         else if (dynamic_cast<IfStatement *>(main->body[i]) != nullptr)
-            ; // TODO
+        {
+            // get expression result, subtract 1
+            // cond-jump after body
+        }
         else if (dynamic_cast<ReturnToken *>(main->body[i]) != nullptr)
+        {
             return err_compile::COMPILE_SUCCESS;
+        }
         else
-            std::cout << "ignored \"" << main->body[i]->raw << "\"" << std::endl;
+        {
+            std::cout << "WARNING: Ignored \"" << main->body[i]->raw << "\" during compilation" << std::endl;
+        }
     }
 
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 6));
-    buffer->push_back(new Instruction(1 << INS_A_IN | 1 << INS_RAM_IN, 1, "i did 1+2 :)"));
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 7));
-    buffer->push_back(new Instruction(1 << INS_B_IN | 1 << INS_RAM_IN, 2));
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 8));
-    buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
-
-    buffer->push_back(new Instruction(1 << INS_A_IN, '0'));
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 6, "load initial A"));
-    buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 2));
-    buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
-
-    buffer->push_back(new Instruction(1 << INS_RAM_IN, '+'));
-
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 7, "load initial B"));
-    buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 2));
-    buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
-
-    buffer->push_back(new Instruction(1 << INS_RAM_IN, '='));
-
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 8, "load result"));
-    buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
-    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 2));
-    buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+    // TODO: look at previous commits for optimization inspiration
 
     return err_compile::COMPILE_NO_EXIT;
 }
@@ -219,11 +335,63 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
 {
     buffer->clear();
 
-    // TODO: assemble labels and jumps
+    // TODO: check if jump target has same upper IP byte as jump (before resolving labels)
+
+    std::vector<std::string> labels = {};
+    std::vector<uint16_t> label_positions = {};
+    uint16_t ip = 0;
     for (size_t i = 0; i < program.size(); i++)
     {
-        buffer->push_back(program[i]->control_word);
-        buffer->push_back((uint8_t)program[i]->literal);
+        if (program[i]->label.size() > 0)
+        {
+            labels.push_back(program[i]->label);
+            label_positions.push_back(ip);
+        }
+        else
+            ip++;
+    }
+
+    for (size_t i = 0; i < program.size(); i++)
+    {
+        if (program[i]->label.size() > 0)
+            ;
+        if (program[i]->label_literal.size() > 0)
+        {
+            uint8_t ram_p = 0;
+            for (size_t j = i; j >= 0; j--)
+            {
+                if (program[j]->control_word & 1 << INS_RAM_P_IN && program[j]->literal_out())
+                {
+                    ram_p = program[j]->literal;
+                    break;
+                }
+            }
+
+            uint16_t ip_literal = 0;
+            bool found = false;
+            for (size_t j = 0; j < labels.size(); j++)
+            {
+                if (program[i]->label_literal == labels[j])
+                {
+                    if (ram_p == 0x01 || ram_p == 0x03)
+                        ip_literal = label_positions[j] >> 8;
+                    else
+                        ip_literal = label_positions[j] & 0xFF;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                return err_assemble::ASSEMBLE_UNDEF_LABEL;
+
+            buffer->push_back(program[i]->control_word);
+            buffer->push_back(ip_literal);
+        }
+        else
+        {
+            buffer->push_back(program[i]->control_word);
+            buffer->push_back((uint8_t)program[i]->literal);
+        }
     }
 
     return err_assemble::ASSEMBLE_SUCCESS;
@@ -242,22 +410,36 @@ std::vector<Instruction *> Assembler::parse_ass(std::string str)
                 program.push_back(ins);
             buffer.clear();
         }
-        else if (str[i] != '\r' && str[i] != '\t')
+        else if (str[i] == '\t')
+        {
+            if (buffer.back() != ' ')
+                buffer += ' ';
+        }
+        else if (str[i] != '\r')
             buffer += str[i];
     }
+
     return program;
 }
 
 std::string Assembler::to_ass(std::vector<Instruction *> program)
 {
+    bool passed_label = false;
     std::string str = "";
     for (size_t i = 0; i < program.size(); i++)
     {
-        if (program[i]->control_word == 0)
-            str += "\t";
+        if (program[i]->label.size() == 0)
+        {
+            if (passed_label)
+                str += "\t";
+        }
+        else
+            passed_label = true;
+
         std::string ins = program[i]->to_ass();
         if (ins.size() > 0)
             str += ins + "\n";
     }
+
     return str;
 }

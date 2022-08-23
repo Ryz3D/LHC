@@ -20,6 +20,7 @@
 #include "tokens/variable.h"
 
 #include "instruction.h"
+#include "defines.h"
 
 #define RAM_EXP_RES1 8
 #define RAM_EXP_RES2 9
@@ -43,4 +44,7 @@ public:
     static err_assemble assemble(std::vector<Instruction *> program, std::vector<uint8_t> *buffer);
     static std::vector<Instruction *> parse_ass(std::string str);
     static std::string to_ass(std::vector<Instruction *> program);
+
+private:
+    static uint32_t label_counter;
 };

@@ -2,7 +2,7 @@
 
 bool OperatorToken::is_supported()
 {
-    return true;
+    return STR_IS_OP(op);
 }
 
 std::vector<Token *> OperatorToken::get_children()

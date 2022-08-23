@@ -1,11 +1,22 @@
 #include "instruction.h"
 
-Instruction::Instruction(uint8_t control_word, uint16_t literal, std::string comment)
+Instruction::Instruction(std::string label)
+{
+    this->label = label;
+}
+
+Instruction::Instruction(uint8_t control_word, uint8_t literal, std::string comment)
 {
     this->control_word = control_word;
     this->literal = literal;
     this->comment = comment;
-    nop = control_word & 0b1111 ? false : true;
+}
+
+Instruction::Instruction(uint8_t control_word, std::string label_literal, std::string comment)
+{
+    this->control_word = control_word;
+    this->label_literal = label_literal;
+    this->comment = comment;
 }
 
 Instruction *Instruction::parse_ass(std::string str)
@@ -14,6 +25,12 @@ Instruction *Instruction::parse_ass(std::string str)
     bool out = true;
     bool has_literal = false;
     std::string cw_buffer = "";
+
+    if (str[0] == ';' && str.size() > 1)
+    {
+        ins->label = str.substr(1);
+        return ins;
+    }
 
     for (size_t i = 0; i < str.size(); i++)
     {
@@ -73,37 +90,45 @@ void Instruction::parse_ins_part(bool out, bool *has_literal, std::string str)
 {
     if (out && !*has_literal)
     {
-        bool is_literal = false;
-        bool is_negative = false;
-        literal = 0;
-        for (size_t j = 0; j < str.size(); j++)
+        if (str[0] == '!' && str.size() > 1)
         {
-            if (j == 0 && str[j] == '-')
-                is_negative = true;
-            else if ('0' <= str[j] && str[j] <= '9')
-            {
-                is_literal = true;
-                literal *= 10;
-                literal += str[j] - '0';
-            }
-            else
-            {
-                is_literal = false;
-                literal = 0;
-                break;
-            }
-        }
-        if (is_literal)
-        {
-            if (is_negative)
-                literal = 256 - literal;
-            nop = false;
+            size_t i = 1;
+            while ((str[i] >= 'a' && str[i] <= 'z') || (str[i] >= 'A' && str[i] <= 'Z') || (str[i] >= '0' && str[i] <= '9') || str[i] == '_')
+                label_literal += str[i++];
             *has_literal = true;
+        }
+        else
+        {
+            bool is_literal = false;
+            bool is_negative = false;
+
+            literal = 0;
+            for (size_t j = 0; j < str.size(); j++)
+            {
+                if (j == 0 && str[j] == '-')
+                    is_negative = true;
+                else if ('0' <= str[j] && str[j] <= '9')
+                {
+                    is_literal = true;
+                    literal *= 10;
+                    literal += str[j] - '0';
+                }
+                else
+                {
+                    is_literal = false;
+                    literal = 0;
+                    break;
+                }
+            }
+            if (is_literal)
+            {
+                if (is_negative)
+                    literal = 256 - literal;
+                *has_literal = true;
+            }
         }
     }
     control_word |= Instruction::parse_cw(out, str);
-    if (control_word)
-        nop = false;
 }
 
 bool Instruction::literal_out()
@@ -113,6 +138,9 @@ bool Instruction::literal_out()
 
 std::string Instruction::to_ass()
 {
+    if (label.size() > 0)
+        return ";" + label;
+
     std::string ass = "";
 
     if ((control_word >> INS_RAM_OUT) & 1)
@@ -125,7 +153,12 @@ std::string Instruction::to_ass()
         ass += "INV ";
 
     if (literal_out())
-        ass += std::to_string(literal) + " ";
+    {
+        if (label_literal.size() > 0)
+            ass += ":" + label_literal + " ";
+        else
+            ass += std::to_string(literal) + " ";
+    }
 
     ass += "-> ";
 

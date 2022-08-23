@@ -2,10 +2,9 @@
 
 err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser_state state)
 {
-    // check for <= >= != etc. (only in expression state)
-    // convert ++ to = [] + 1
     buffer->clear();
 
+    std::vector<std::string> exp_operators = {};
     lhc_type parsed_type = lhc_type::INVALID;
     std::string token_buffer = "";
     std::string str = str_in + " ";
@@ -28,7 +27,7 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
             }
         }
 
-        if ((str[i] >= 'a' && str[i] <= 'z') || (str[i] >= 'A' && str[i] <= 'Z') || (str[i] >= '0' && str[i] <= '9') || str[i] == '_')
+        if (CHAR_IS_NAME(str[i]))
             token_buffer.push_back(str[i]);
         else if (token_buffer.size() > 0)
         {
@@ -42,19 +41,14 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
             {
                 if (!Parser::parse_keyword(token_buffer, str, buffer, &i))
                 {
-                    if (state == parser_state::PARSE_EXPRESSION)
-                        buffer->push_back(new VariableToken(token_buffer));
-                    else
+                    DefinitionToken *def = new DefinitionToken();
+                    if (previous_type != lhc_type::INVALID)
                     {
-                        DefinitionToken *def = new DefinitionToken();
-                        if (previous_type != lhc_type::INVALID)
-                        {
-                            def->var_name = token_buffer;
-                            def->var_type = previous_type;
-                            buffer->push_back(def);
-                        }
+                        def->var_name = token_buffer;
+                        def->var_type = previous_type;
+                        buffer->push_back(def);
                     }
-                    while ((str[i] == ' ' || str[i] == '\t' || str[i] == '\n') && i < str.size() - 1)
+                    while (CHAR_IS_EMPTY(str[i]) && i < str.size() - 1)
                         i++;
                     if (str[i] == ',')
                     {
@@ -106,7 +100,7 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                             buffer->pop_back();
                             FunctionToken *func = new FunctionToken(str.substr(start, i - start));
                             func->func_name = token_buffer;
-                            func->func_ret_type = parsed_type;
+                            func->func_ret_type = previous_type;
                             err_parse err = Parser::parse(str.substr(params_start, params_end - params_start), &func->params, parser_state::PARSE_PARAMS);
                             if (err != err_parse::PARSE_SUCCESS)
                                 return err;
@@ -135,55 +129,43 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                                 return err_parse::PARSE_ENDING_ASSIGNMENT;
                         }
 
-                        bool inc = false, dec = false;
-                        if (str[i] == '+' && str[i + 1] == '+')
-                            inc = true;
-                        if (str[i] == '-' && str[i + 1] == '-')
-                            dec = true;
-                        if (inc || dec)
+                        if (CHAR_IS_ASSIGN_OP(str[i]) && str[i + 1] == '=' && (state == parser_state::PARSE_STATEMENT || state == parser_state::PARSE_ANY))
+                            i++;
+                        else
                         {
-                            AssignmentToken *assignment = new AssignmentToken();
-                            assignment->var_name = token_buffer;
-                            assignment->expression = new ExpressionToken(token_buffer + (inc ? "+1" : "-1"));
-                            OperatorToken *op = new OperatorToken();
-                            op->a = new ExpressionToken(token_buffer);
-                            op->a->content.push_back(new VariableToken(token_buffer));
-                            op->op = inc ? "+" : "-";
-                            op->b = new ExpressionToken("1");
-                            op->b->content.push_back(new LiteralInt("1"));
-                            assignment->expression->content.push_back(op);
-                            buffer->push_back(assignment);
+                            bool inc = false, dec = false;
+                            if (str[i] == '+' && str[i + 1] == '+')
+                                inc = true;
+                            if (str[i] == '-' && str[i + 1] == '-')
+                                dec = true;
+                            if (inc || dec)
+                            {
+                                AssignmentToken *assignment = new AssignmentToken();
+                                assignment->var_name = token_buffer;
+                                assignment->expression = new ExpressionToken(token_buffer + (inc ? " + 1" : " - 1"));
+                                OperatorToken *op = new OperatorToken();
+                                op->a = new ExpressionToken(token_buffer);
+                                op->a->content.push_back(new VariableToken(token_buffer));
+                                op->op = inc ? "+" : "-";
+                                op->b = new ExpressionToken("1");
+                                op->b->content.push_back(new LiteralInt("1"));
+                                assignment->expression->content.push_back(op);
+                                buffer->push_back(assignment);
 
-                            while (str[i] != ';' && i < str.size() - 1)
-                                i++;
-                            if (i < str.size() - 1)
-                                i++;
+                                while (str[i] != ';' && i < str.size() - 1)
+                                    i++;
+                                if (i < str.size() - 1)
+                                    i++;
+                            }
                         }
 
                         if (str[i] == '=' && str[i + 1] != '=')
                         {
-                            uint8_t special = 0;
-                            switch (str[i - 1])
-                            {
-                            case '+':
-                                special = 1;
-                                break;
-                            case '-':
-                                special = 2;
-                                break;
-                            case '*':
-                                special = 3;
-                                break;
-                            case '/':
-                                special = 4;
-                                break;
-                            default:
-                                break;
-                            }
+                            char op = str[i - 1];
 
                             if (i < str.size() - 1)
                                 i++;
-                            while ((str[i] == ' ' || str[i] == '\t' || str[i] == '\n') && i < str.size() - 1)
+                            while (CHAR_IS_EMPTY(str[i]) && i < str.size() - 1)
                                 i++;
                             size_t exp_start = i;
                             while (str[i] != ';' && i < str.size() - 1)
@@ -192,10 +174,18 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                             if (i < str.size() - 1)
                                 i++;
 
+                            if (CHAR_IS_OP(op))
+                                exp_str = token_buffer + op + exp_str;
+
                             AssignmentToken *assignment = new AssignmentToken();
                             assignment->var_name = token_buffer;
                             assignment->expression = new ExpressionToken(exp_str);
                             err_parse err = Parser::parse(exp_str, &assignment->expression->content, parser_state::PARSE_EXPRESSION);
+                            std::cout << "LIST" << std::endl;
+                            for (size_t j = 0; j < assignment->expression->content.size(); j++)
+                                std::cout
+                                    << assignment->expression->content[j]->raw << std::endl;
+                            std::cout << "/LIST" << std::endl;
                             if (err != err_parse::PARSE_SUCCESS)
                                 return err;
                             buffer->push_back(assignment);
@@ -209,47 +199,39 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
             token_buffer.clear();
         }
 
+        // TODO: parse expressions in parantheses recursively
+        // TODO: check for <= >= != etc.
+
         if (state == parser_state::PARSE_ANY || state == parser_state::PARSE_EXPRESSION)
         {
-            // TODO: split expressions into Operators until Variable / Literal
+            err_parse err = Parser::parse_expression_part(str, buffer, &exp_operators, &i, &token_buffer);
+            if (err != err_parse::PARSE_SUCCESS)
+                return err;
+        }
+    }
 
-            if (str[i] == '"')
-            {
-                size_t start = i++;
-                while (!(str[i] == '"' && str[i] != '\\') && i < str.size())
-                    i++;
-                if (i >= str.size() - 1)
-                    return err_parse::PARSE_ENDING_STRING;
-
-                buffer->push_back(new LiteralString(str.substr(start, (++i) - start)));
-            }
-            else if (str[i] == '\'')
-            {
-                size_t start = i++;
-                while (!(str[i] == '\'' && str[i] != '\\') && i < str.size())
-                    i++;
-                if (i >= str.size() - 1)
-                    return err_parse::PARSE_ENDING_CHAR;
-
-                buffer->push_back(new LiteralChar(str.substr(start, (++i) - start)));
-            }
-            else if (str[i] >= '0' && str[i] <= '9')
-            {
-                if (str[i == 0 ? 0 : (i - 1)] == '-')
-                    token_buffer.push_back('-');
-                if (i < str.size() - 1)
-                    i++;
-                while (str[i] >= '0' && str[i] <= '9' && i < str.size() - 1)
-                    token_buffer.push_back(str[i++]);
-
-                // TODO: OPERATORS!!!
-                if (str[i] == ' ' || str[i] == ';' || str[i] == ')')
-                    buffer->push_back(new LiteralInt(token_buffer));
-                else
-                    return err_parse::PARSE_NAN;
-
-                token_buffer.clear();
-            }
+    if (state == parser_state::PARSE_ANY || state == parser_state::PARSE_EXPRESSION)
+    {
+        if (buffer->size() == 0 || buffer->size() == 1)
+            return err_parse::PARSE_SUCCESS;
+        else if (buffer->size() == 2)
+        {
+            OperatorToken *op = new OperatorToken();
+            // TODO: figure out type in resolve
+            op->op_type = lhc_type::INVALID;
+            op->raw = buffer->at(0)->raw + " " + exp_operators[0] + " " + buffer->at(1)->raw;
+            op->a = new ExpressionToken();
+            op->a->content.push_back(buffer->at(0));
+            op->op = exp_operators[0];
+            op->b = new ExpressionToken();
+            op->b->content.push_back(buffer->at(1));
+            buffer->clear();
+            buffer->push_back(op);
+        }
+        else
+        {
+            // TODO
+            std::cout << "expression with " << buffer->size() << " tokens (\"" << str << "\") is not supported yet... :(";
         }
     }
 
@@ -374,4 +356,138 @@ bool Parser::parse_keyword(std::string kw, std::string str, std::vector<Token *>
     }
     else
         return false;
+}
+
+err_parse Parser::parse_expression_part(std::string str, std::vector<Token *> *buffer, std::vector<std::string> *exp_operators, size_t *i, std::string *token_buffer)
+{
+    bool new_token = false;
+    bool new_op = false;
+    bool parse_var = false;
+
+    if (str[*i] == '"' && str[*i == 0 ? 0 : *i - 1] != '\\')
+    {
+        size_t start = (*i)++;
+        while (!(str[*i] == '"' && str[*i - 1] != '\\') && *i < str.size())
+            (*i)++;
+        if (*i >= str.size() - 1)
+            return err_parse::PARSE_ENDING_STRING;
+
+        buffer->push_back(new LiteralString(str.substr(start, (++*i) - start)));
+        new_token = true;
+    }
+    else if (str[*i] == '\'' && str[*i == 0 ? 0 : *i - 1] != '\\')
+    {
+        size_t start = (*i)++;
+        while (!(str[*i] == '\'' && str[*i - 1] != '\\') && *i < str.size())
+            (*i)++;
+        if (*i >= str.size() - 1)
+            return err_parse::PARSE_ENDING_CHAR;
+
+        buffer->push_back(new LiteralChar(str.substr(start, (++*i) - start)));
+        new_token = true;
+    }
+    else if (CHAR_IS_NUM(str[*i]))
+    {
+        if (token_buffer->size() == 0)
+        {
+            if (str[*i == 0 ? 0 : (*i - 1)] == '-')
+                token_buffer->push_back('-');
+            if (*i < str.size() - 1)
+                (*i)++;
+            while (CHAR_IS_NUM(str[*i]) && *i < str.size() - 1)
+                token_buffer->push_back(str[(*i)++]);
+            if (!CHAR_IS_END(str[*i]) && !CHAR_IS_OP(str[*i]))
+                return err_parse::PARSE_NAN;
+            buffer->push_back(new LiteralInt(*token_buffer));
+        }
+        else
+        {
+            if (token_buffer->at(0) == '\'' &&
+                token_buffer->size() > 2 &&
+                token_buffer->back() == '\'' &&
+                token_buffer->at(token_buffer->size() - 2) != '\\')
+            {
+                buffer->push_back(new LiteralChar(token_buffer->substr(1, token_buffer->size() - 2)));
+            }
+            else
+            {
+                bool is_num = true;
+                for (size_t j = 0; j < token_buffer->size(); j++)
+                {
+                    if (!CHAR_IS_NUM(token_buffer->at(j)) || (j == 0 && token_buffer->at(0) == '-'))
+                    {
+                        is_num = false;
+                        break;
+                    }
+                }
+
+                if (is_num)
+                    buffer->push_back(new LiteralInt(*token_buffer));
+                else
+                    buffer->push_back(new VariableToken(*token_buffer));
+            }
+        }
+
+        new_token = true;
+        token_buffer->clear();
+    }
+    else if (CHAR_IS_OP(str[*i]))
+    {
+        parse_var = true;
+        std::string op = str.substr(*i, 2);
+        if (STR_IS_OP(op))
+        {
+            exp_operators->push_back(op);
+            (*i)++;
+        }
+        else
+            exp_operators->push_back(op.substr(0, 1));
+        new_op = true;
+    }
+    else if (CHAR_IS_EMPTY(str[*i]))
+        parse_var = true;
+
+    if (parse_var && token_buffer->size() > 0)
+    {
+        if (token_buffer->at(0) == '\'' &&
+            token_buffer->size() > 2 &&
+            token_buffer->back() == '\'' &&
+            token_buffer->at(token_buffer->size() - 2) != '\\')
+        {
+            buffer->push_back(new LiteralChar(token_buffer->substr(1, token_buffer->size() - 2)));
+        }
+        else
+        {
+            bool is_num = true;
+            for (size_t j = 0; j < token_buffer->size(); j++)
+            {
+                if (!CHAR_IS_NUM(token_buffer->at(j)))
+                {
+                    is_num = false;
+                    break;
+                }
+            }
+
+            if (is_num)
+                buffer->push_back(new LiteralInt(*token_buffer));
+            else
+                buffer->push_back(new VariableToken(*token_buffer));
+        }
+
+        new_token = true;
+        token_buffer->clear();
+    }
+
+    if (new_token)
+    {
+        if (buffer->size() != exp_operators->size() + 1)
+            return err_parse::PARSE_UNEXPECTED_TOKEN;
+    }
+    else if (new_op)
+    {
+        if (buffer->size() != exp_operators->size())
+            return err_parse::PARSE_UNEXPECTED_OP;
+    }
+
+    return err_parse::PARSE_SUCCESS;
 }
