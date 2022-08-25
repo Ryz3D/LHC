@@ -12,7 +12,7 @@ void Sim::execute(std::vector<Instruction *> program, size_t max_step, bool debu
     {
         Instruction *ins = program[ip];
 
-        if (ins->label.size() == 0)
+        if (ins->label.empty())
         {
             uint8_t bus = 0;
             if (ins->literal_out())

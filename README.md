@@ -21,7 +21,9 @@ _(pretty much)_
 ## TO-DO
 
 - Support `if` by conditional jumps
-- Handle `else` by caching result of `if` condition
+- Handle `else` by jumping past by default
+- Multiplication, division and modulo
+- Multi-byte types
 - Native `print_uint` function for multiple digits
 - Native `print_int` function for negative sign
 
@@ -38,7 +40,9 @@ _(pretty much)_
 
 ## _(notes for version two)_
 
-- Simpler tokenization, separate from parsing
-  - Only keywords and names
+- Simpler tokenization, seperate from parsing
+  - Only keywords, names and symbols
   - ExpressionToken is useless
+  - Use `struct` for Token types
+    - I could write it in C...
 - Proper error messages (show problematic line/keyword)

@@ -6,6 +6,7 @@
 
 #include "../lhc_errors.h"
 #include "../token.h"
+#include "../defines.h"
 
 class LiteralString : public Token
 {

@@ -34,10 +34,15 @@ void LiteralString::resolve()
 
 void LiteralInt::resolve()
 {
+    bool negative = false;
     data = 0;
     for (size_t i = 0; i < raw.size(); i++)
     {
-        if (raw[i] >= '0' && raw[i] <= '9')
+        if (i == 0 && raw[0] == '-')
+        {
+            negative = true;
+        }
+        else if (CHAR_IS_NUM(raw[i]))
         {
             data *= 10;
             data += raw[i] - '0';
@@ -49,6 +54,8 @@ void LiteralInt::resolve()
         }
     }
 
+    if (negative)
+        data = 256 - data;
     resolved = true;
 }
 

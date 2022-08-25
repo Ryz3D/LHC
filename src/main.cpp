@@ -9,14 +9,11 @@
 
 /*
 ACUTE TODO:
+ - signed comparisons
  - operator (order)
  - if parse
  - inline if
  - return value from calltoken
- - convert mandel.c to mandel2.c
-  - only int8_t
-  - smaller area, constant y
-  - split operations if not implemented by then
 
 0x00 reserved
 0x01/0x02 instruction pointer
@@ -32,7 +29,8 @@ void help()
 {
     std::cout << "Usage: lhc [Options] [Input] [Output]" << std::endl;
     std::cout << "\tOptions:" << std::endl;
-    std::cout << "\t\t-s [steps || 200] Run simulation" << std::endl;
+    std::cout << "\t\t-s [steps || 10000] Run simulation" << std::endl;
+    std::cout << "\t\t-d Simulation debug output" << std::endl;
     std::cout << "\tInput:" << std::endl;
     std::cout << "\t\t-ic [path] C source file" << std::endl;
     std::cout << "\t\t-ia [path] Assembly file" << std::endl;
@@ -50,6 +48,7 @@ int main(int argc, char *argv[])
     }
 
     size_t sim_steps = 0;
+    bool sim_debug = false;
     std::string in_c = "";
     std::string in_ass = "";
     std::string out_ass = "";
@@ -59,11 +58,13 @@ int main(int argc, char *argv[])
         std::string a = std::string(argv[i]);
         if (a == "-s")
         {
-            sim_steps = 200;
+            sim_steps = 10000;
             if (i < argc - 1)
                 if (argv[i + 1][0] >= '0' && argv[i + 1][0] <= '9')
                     sim_steps = std::stoi(argv[i + 1]);
         }
+        else if (a == "-d")
+            sim_debug = true;
         else if (a == "-ic" && i < argc - 1)
             in_c = argv[i + 1];
         else if (a == "-ia" && i < argc - 1)
@@ -125,7 +126,10 @@ int main(int argc, char *argv[])
     if (sim_steps > 0)
     {
         Sim cpu = Sim();
-        cpu.execute(program, sim_steps, true);
+        std::cout << "Simulation started" << std::endl;
+        cpu.execute(program, sim_steps, sim_debug);
+        if (!cpu.output_buffer.empty())
+            std::cout << "Output: " << cpu.output_buffer << std::endl;
     }
 
     std::cout << "LHC Done!" << std::endl;

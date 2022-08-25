@@ -12,7 +12,7 @@ class Sim
 public:
     Sim();
 
-    void execute(std::vector<Instruction *> program, size_t max_step = 200, bool debug = false);
+    void execute(std::vector<Instruction *> program, size_t max_step, bool debug = false);
     void debug_log(Instruction *ins);
 
     uint8_t A = 0, B = 0, RAM_P = 0;

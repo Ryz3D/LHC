@@ -12,7 +12,7 @@ int interpret_bf(std::string program)
             if (program[i - 1] == ']')
             {
                 loop_stack.pop_back();
-                loop_cache.push_back(loop_stack.size() == 0 ? 0 : loop_stack.back());
+                loop_cache.push_back(loop_stack.empty() ? 0 : loop_stack.back());
             }
             else
                 loop_cache.push_back(loop_cache[i - 1]);

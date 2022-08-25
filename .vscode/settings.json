@@ -45,6 +45,7 @@
         "xtr1common": "cpp",
         "xutility": "cpp",
         "stdbool.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "stdint.h": "c"
     }
 }

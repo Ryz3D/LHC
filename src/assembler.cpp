@@ -31,6 +31,8 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             buffer->push_back(new Instruction(1 << INS_RAM_P_IN, var->ram_location));
             buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
             buffer->push_back(new Instruction(1 << INS_B_IN, 0));
+            if (dynamic_cast<VariableToken *>(exp->content[0])->negative)
+                buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
             buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));
             buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
         }
@@ -128,7 +130,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                     buffer->push_back(new Instruction(l_true));
                 }
 
-                if (op->op == "==" || op->op == "!=")
+                if (op->op == "!=")
                 {
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
@@ -198,6 +200,8 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
         else
             std::cout << "Can't evaluate \"" << exp->content[0]->raw << "\" (yet)" << std::endl;
     }
+
+    // TODO: iterate with flags (i.e. B=0) to remove redundant instructions
 
     return err_compile::COMPILE_SUCCESS;
 }
@@ -428,7 +432,7 @@ std::string Assembler::to_ass(std::vector<Instruction *> program)
     std::string str = "";
     for (size_t i = 0; i < program.size(); i++)
     {
-        if (program[i]->label.size() == 0)
+        if (program[i]->label.empty())
         {
             if (passed_label)
                 str += "\t";

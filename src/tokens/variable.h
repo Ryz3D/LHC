@@ -13,4 +13,6 @@ public:
     using Token::Token;
     bool is_supported() override;
     void resolve() override;
+
+    bool negative = false;
 };

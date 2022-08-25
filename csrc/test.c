@@ -2,47 +2,39 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// DOES NOT RUN:
+//  - modulo
+//  - division
+
 int main()
 {
-    int a = 1 < 2;
-    a += '0';
-    putchar(a);
+    int a = 0;
+    int b = 1;
+    int c = 0;
 
-    /*
-    int a1 = 1 < 2;
-    int a2 = 2 < 2;
-    int a3 = 3 < 2;
-    int b1 = 1 == 2;
-    int b2 = 2 == 2;
-    int b3 = 3 == 2;
-    int c1 = 1 > 2;
-    int c2 = 2 > 2;
-    int c3 = 3 > 2;
-    int d1 = 1 <= 2;
-    int d2 = 2 <= 2;
-    int d3 = 3 <= 2;
-    int e1 = 1 >= 2;
-    int e2 = 2 >= 2;
-    int e3 = 3 >= 2;
-    */
+loop:
+    c = a;  // buffer a
+    a = b;  // shift b left
+    b += c; // add into b
 
-    /*
-    putchar('0' + a1);
-    putchar('0' + a2);
-    putchar('0' + a3);
-    putchar('0' + b1);
-    putchar('0' + b2);
-    putchar('0' + b3);
-    putchar('0' + c1);
-    putchar('0' + c2);
-    putchar('0' + c3);
-    putchar('0' + d1);
-    putchar('0' + d2);
-    putchar('0' + d3);
-    putchar('0' + e1);
-    putchar('0' + e2);
-    putchar('0' + e3);
-    */
+    c = b / 100;
+    c %= 10;
+    c += '0';
+    putchar(c);
+
+    c = b / 10;
+    c %= 10;
+    c += '0';
+    putchar(c);
+
+    c = b;
+    c %= 10;
+    c += '0';
+    putchar(c);
+    putchar(' ');
+
+    // if (b < 80)
+    goto loop;
 
     return 0;
 }

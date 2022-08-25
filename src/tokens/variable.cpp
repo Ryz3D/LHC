@@ -7,5 +7,10 @@ bool VariableToken::is_supported()
 
 void VariableToken::resolve()
 {
+    if (raw[0] == '-')
+    {
+        raw = raw.substr(1);
+        negative = true;
+    }
     resolved = true;
 }

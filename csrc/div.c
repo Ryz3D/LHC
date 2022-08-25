@@ -2,6 +2,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// DOES NOT RUN:
+//  - if statements
+
 int ia = 15;
 int a;
 int b = 5;
@@ -18,7 +21,8 @@ div:
         goto end;
     goto div;
 end:
-    putchar('0' + i);
+    i += '0';
+    putchar(i);
 
     return 0;
 }
