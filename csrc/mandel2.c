@@ -1,7 +1,6 @@
-#include <stdio.h>
+#include "g_include.h"
 
 // DOES NOT RUN:
-//  - if statements
 //  - 32 bit integers
 
 int main()

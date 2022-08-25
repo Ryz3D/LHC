@@ -1,11 +1,11 @@
-#include "if.h"
+#include "while.h"
 
-bool IfStatement::is_supported()
+bool WhileLoop::is_supported()
 {
     return true;
 }
 
-std::vector<Token *> IfStatement::get_children()
+std::vector<Token *> WhileLoop::get_children()
 {
     std::vector<Token *> tokens = {condition};
     for (size_t i = 0; i < body.size(); i++)
@@ -13,7 +13,7 @@ std::vector<Token *> IfStatement::get_children()
     return tokens;
 }
 
-void IfStatement::resolve()
+void WhileLoop::resolve()
 {
     resolved = true;
 }

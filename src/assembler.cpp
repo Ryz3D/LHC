@@ -84,10 +84,19 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));     // Add into target
                 buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
             }
-            else if (op->op == "*" || op->op == "/")
+            else if (op->op == "*")
             {
                 // TODO
-                std::cout << "WARNING: " << op->op << " ignored";
+                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
+            }
+            else if (op->op == "/")
+            {
+                // TODO
+                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
+            }
+            else if (op->op == "%")
+            {
+                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
             }
             else if (op->op == "<" || op->op == ">" || op->op == "<=" || op->op == ">=" || op->op == "==")
             {
@@ -190,7 +199,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             else if (op->op == "||" || op->op == "&&")
             {
                 // TODO
-                std::cout << "WARNING: " << op->op << " ignored";
+                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
             }
             else
                 return err_compile::COMPILE_ILLEGAL_OP;
@@ -204,6 +213,116 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
     // TODO: iterate with flags (i.e. B=0) to remove redundant instructions
 
     return err_compile::COMPILE_SUCCESS;
+}
+
+err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main)
+{
+    for (size_t i = 0; i < tokens.size(); i++)
+    {
+        if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
+            ;
+        else if (dynamic_cast<AssignmentToken *>(tokens[i]) != nullptr)
+        {
+            AssignmentToken *assignment = dynamic_cast<AssignmentToken *>(tokens[i]);
+            Variable *var = Assembler::find_var(assignment->var_name, vars);
+            if (var == nullptr)
+                return err_compile::COMPILE_UNDEF_VAR;
+
+            if (assignment->expression != nullptr)
+            {
+                err_compile err = Assembler::evaluate_exp(assignment->expression, vars, buffer, var->ram_location, var->var_name);
+                if (err != err_compile::COMPILE_SUCCESS)
+                    return err;
+            }
+            else
+                return err_compile::COMPILE_MISSING_EXP;
+        }
+        else if (dynamic_cast<CallToken *>(tokens[i]) != nullptr)
+        {
+            CallToken *call = dynamic_cast<CallToken *>(tokens[i]);
+            ExpressionToken *exp = nullptr;
+            if (call->args.size() > 0)
+                exp = dynamic_cast<ExpressionToken *>(call->args[0]);
+
+            if (call->func_name == "putchar")
+            {
+                if (exp != nullptr)
+                {
+                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, 0x05, call->func_name);
+                    if (err != err_compile::COMPILE_SUCCESS)
+                        return err;
+                }
+                else
+                    return err_compile::COMPILE_MISSING_ARG;
+            }
+            else if (call->func_name == "getchar")
+            {
+                // TODO
+                std::cout << "WARNING: " << call->func_name << " call ignored" << std::endl;
+            }
+            else if (call->func_name == "print_uint")
+            {
+                // TODO
+                std::cout << "WARNING: " << call->func_name << " call ignored" << std::endl;
+            }
+            else if (call->func_name == "print_int")
+            {
+                // TODO
+                std::cout << "WARNING: " << call->func_name << " call ignored" << std::endl;
+            }
+            else
+                return err_compile::COMPILE_UNDEF_FUNC;
+        }
+        else if (dynamic_cast<LabelToken *>(tokens[i]) != nullptr)
+        {
+            buffer->push_back(new Instruction(dynamic_cast<LabelToken *>(tokens[i])->label));
+        }
+        else if (dynamic_cast<GotoToken *>(tokens[i]) != nullptr)
+        {
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<GotoToken *>(tokens[i])->label));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<GotoToken *>(tokens[i])->label));
+        }
+        else if (dynamic_cast<IfStatement *>(tokens[i]) != nullptr)
+        {
+            std::string l_if = "if" + std::to_string(label_counter);
+            IfStatement *statement = dynamic_cast<IfStatement *>(tokens[i]);
+            Assembler::evaluate_exp(statement->condition, vars, buffer, RAM_EXP_RES1);
+            // get expression result, subtract 1
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES1));
+            buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+            buffer->push_back(new Instruction(1 << INS_B_IN, 255));
+            buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN));
+            // cond-jump after body
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_if));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_if));
+
+            Assembler::compile_statements(statement->body, vars, buffer, false);
+
+            buffer->push_back(new Instruction(l_if));
+        }
+        else if (dynamic_cast<WhileLoop *>(tokens[i]) != nullptr)
+        {
+            // TODO
+            std::cout << "WARNING: while loop ignored" << std::endl;
+        }
+        else if (dynamic_cast<ReturnToken *>(tokens[i]) != nullptr)
+        {
+            return err_compile::COMPILE_SUCCESS;
+        }
+        else
+        {
+            std::cout << "WARNING: Ignored \"" << tokens[i]->raw << "\" during compilation" << std::endl;
+        }
+    }
+
+    if (main)
+        return err_compile::COMPILE_NO_EXIT;
+    else
+        return err_compile::COMPILE_SUCCESS;
 }
 
 err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruction *> *buffer)
@@ -259,80 +378,9 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
         }
     }
 
-    for (size_t i = 0; i < main->body.size(); i++)
-    {
-        if (dynamic_cast<DefinitionToken *>(main->body[i]) != nullptr)
-            ;
-        else if (dynamic_cast<AssignmentToken *>(main->body[i]) != nullptr)
-        {
-            AssignmentToken *assignment = dynamic_cast<AssignmentToken *>(main->body[i]);
-            Variable *var = Assembler::find_var(assignment->var_name, vars);
-            if (var == nullptr)
-                return err_compile::COMPILE_UNDEF_VAR;
-
-            if (assignment->expression != nullptr)
-            {
-                err_compile err = Assembler::evaluate_exp(assignment->expression, vars, buffer, var->ram_location, var->var_name);
-                if (err != err_compile::COMPILE_SUCCESS)
-                    return err;
-            }
-            else
-                return err_compile::COMPILE_MISSING_EXP;
-        }
-        else if (dynamic_cast<CallToken *>(main->body[i]) != nullptr)
-        {
-            CallToken *call = dynamic_cast<CallToken *>(main->body[i]);
-            ExpressionToken *exp = nullptr;
-            if (call->args.size() > 0)
-                exp = dynamic_cast<ExpressionToken *>(call->args[0]);
-
-            if (call->func_name == "putchar")
-            {
-                if (exp != nullptr)
-                {
-                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, 0x05, call->func_name);
-                    if (err != err_compile::COMPILE_SUCCESS)
-                        return err;
-                }
-                else
-                    return err_compile::COMPILE_MISSING_ARG;
-            }
-            else if (call->func_name == "getchar")
-            {
-                // TODO
-            }
-            else
-                return err_compile::COMPILE_UNDEF_FUNC;
-        }
-        else if (dynamic_cast<LabelToken *>(main->body[i]) != nullptr)
-        {
-            buffer->push_back(new Instruction(dynamic_cast<LabelToken *>(main->body[i])->label));
-        }
-        else if (dynamic_cast<GotoToken *>(main->body[i]) != nullptr)
-        {
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
-            buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<GotoToken *>(main->body[i])->label));
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
-            buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<GotoToken *>(main->body[i])->label));
-        }
-        else if (dynamic_cast<IfStatement *>(main->body[i]) != nullptr)
-        {
-            // get expression result, subtract 1
-            // cond-jump after body
-        }
-        else if (dynamic_cast<ReturnToken *>(main->body[i]) != nullptr)
-        {
-            return err_compile::COMPILE_SUCCESS;
-        }
-        else
-        {
-            std::cout << "WARNING: Ignored \"" << main->body[i]->raw << "\" during compilation" << std::endl;
-        }
-    }
+    return Assembler::compile_statements(main->body, vars, buffer, true);
 
     // TODO: look at previous commits for optimization inspiration
-
-    return err_compile::COMPILE_NO_EXIT;
 }
 
 err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector<uint8_t> *buffer)

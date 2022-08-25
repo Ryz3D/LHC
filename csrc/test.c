@@ -1,40 +1,24 @@
-#include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-
-// DOES NOT RUN:
-//  - modulo
-//  - division
+#include "g_include.h"
 
 int main()
 {
-    int a = 0;
-    int b = 1;
+    int a = 3;
+    int b = 2;
+
     int c = 0;
+    int i = b - 1;
 
-loop:
-    c = a;  // buffer a
-    a = b;  // shift b left
-    b += c; // add into b
-
-    c = b / 100;
-    c %= 10;
+div:
+    c += a;
+    i--;
+    if (i < 0)
+    {
+        goto end;
+    }
+    goto div;
+end:
     c += '0';
     putchar(c);
-
-    c = b / 10;
-    c %= 10;
-    c += '0';
-    putchar(c);
-
-    c = b;
-    c %= 10;
-    c += '0';
-    putchar(c);
-    putchar(' ');
-
-    // if (b < 80)
-    goto loop;
 
     return 0;
 }

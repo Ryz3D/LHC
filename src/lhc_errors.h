@@ -10,6 +10,7 @@ enum err_parse
     PARSE_NAN,                      // numeric literal not terminated with CHAR_END or CHAR_OP (see defines.h)
     PARSE_UNEXPECTED_FUNCTION_DEF,  // function definition at illegal position
     PARSE_UNEXPECTED_FUNCTION_CALL, // function call at illegal position
+    PARSE_UNEXPECTED_STATEMENT,     // if, while, for at illegal position
     PARSE_MULTI_DEF,                // comma after definition
     PARSE_UNEXPECTED_TOKEN,         // expected operator after token, got another token
     PARSE_UNEXPECTED_OP             // expected expression after operator, got another operator

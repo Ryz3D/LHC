@@ -17,6 +17,7 @@
 #include "tokens/operator.h"
 #include "tokens/return.h"
 #include "tokens/variable.h"
+#include "tokens/while.h"
 
 #include "defines.h"
 
@@ -36,6 +37,7 @@ public:
     static err_resolve resolve(std::vector<Token *> tokens, bool debug = false);
 
 private:
+    static void find_end(std::string str, size_t *i, char c = '}');
     static lhc_type parse_type(std::string str);
     static bool parse_keyword(std::string kw, std::string str, std::vector<Token *> *buffer, size_t *i);
     static err_parse parse_expression_part(std::string str, std::vector<Token *> *buffer, std::vector<std::string> *exp_operators, size_t *i, std::string *token_buffer);

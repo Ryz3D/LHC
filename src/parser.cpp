@@ -62,46 +62,95 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                     {
                         if (previous_type == lhc_type::INVALID) // FUNCTION CALL
                         {
-                            if (state != parser_state::PARSE_ANY && state != parser_state::PARSE_STATEMENT && state != parser_state::PARSE_EXPRESSION)
-                                return err_parse::PARSE_UNEXPECTED_FUNCTION_CALL;
+                            size_t args_start = ++i;
+                            Parser::find_end(str, &i, ')');
+                            std::string args = str.substr(args_start, i - args_start - 1);
 
-                            size_t args_start = i + 1;
-                            while (str[i] != ')' && i < str.size() - 1)
-                                i++;
+                            if (token_buffer == "if")
+                            {
+                                if (state != parser_state::PARSE_ANY && state != parser_state::PARSE_STATEMENT)
+                                    return err_parse::PARSE_UNEXPECTED_STATEMENT;
 
-                            std::string args = str.substr(args_start, i - args_start);
-                            CallToken *call = new CallToken(token_buffer + "(" + args + ")");
-                            call->func_name = token_buffer;
-                            ExpressionToken *exp = new ExpressionToken(args);
-                            // TODO: multiple arguments, split by comma and parse each as expression
-                            err_parse err = Parser::parse(args, &exp->content, parser_state::PARSE_EXPRESSION);
-                            if (err != err_parse::PARSE_SUCCESS)
-                                return err;
-                            call->args.push_back(exp);
+                                while (str[i] != '{' && i < str.size() - 1)
+                                    i++;
+                                size_t start = ++i;
+                                Parser::find_end(str, &i);
+                                std::string body = str.substr(start, i - start - 1);
 
-                            buffer->push_back(call);
+                                IfStatement *statement = new IfStatement("if (" + args + ") {" + body + "}");
+                                statement->condition = new ExpressionToken(args);
+                                err_parse err = Parser::parse(args, &statement->condition->content, parser_state::PARSE_EXPRESSION);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                err = Parser::parse(body, &statement->body, parser_state::PARSE_STATEMENT);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                buffer->push_back(statement);
+                            }
+                            else if (token_buffer == "while")
+                            {
+                                if (state != parser_state::PARSE_ANY && state != parser_state::PARSE_STATEMENT)
+                                    return err_parse::PARSE_UNEXPECTED_STATEMENT;
+
+                                while (str[i] != '{' && i < str.size() - 1)
+                                    i++;
+                                size_t start = ++i;
+                                Parser::find_end(str, &i);
+                                std::string body = str.substr(start, i - start - 1);
+
+                                WhileLoop *loop = new WhileLoop("while (" + args + ") {" + body + "}");
+                                loop->condition = new ExpressionToken(args);
+                                err_parse err = Parser::parse(args, &loop->condition->content, parser_state::PARSE_EXPRESSION);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                err = Parser::parse(body, &loop->body, parser_state::PARSE_STATEMENT);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                buffer->push_back(loop);
+                            }
+                            else if (token_buffer == "for")
+                            {
+                                if (state != parser_state::PARSE_ANY && state != parser_state::PARSE_STATEMENT)
+                                    return err_parse::PARSE_UNEXPECTED_STATEMENT;
+
+                                std::cout << "WARNING: for loop not supported (" << args << ")" << std::endl;
+                            }
+                            else
+                            {
+                                if (state != parser_state::PARSE_ANY && state != parser_state::PARSE_STATEMENT && state != parser_state::PARSE_EXPRESSION)
+                                    return err_parse::PARSE_UNEXPECTED_FUNCTION_CALL;
+
+                                CallToken *call = new CallToken(token_buffer + "(" + args + ")");
+                                call->func_name = token_buffer;
+                                ExpressionToken *exp = new ExpressionToken(args);
+                                // TODO: multiple arguments, split by comma and parse each as expression
+                                err_parse err = Parser::parse(args, &exp->content, parser_state::PARSE_EXPRESSION);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                call->args.push_back(exp);
+
+                                buffer->push_back(call);
+                            }
                         }
                         else // FUNCTION DEFINITION
                         {
                             if (state != parser_state::PARSE_ANY && state != parser_state::PARSE_TOP_LEVEL)
                                 return err_parse::PARSE_UNEXPECTED_FUNCTION_DEF;
 
-                            size_t params_start = i + 1;
-                            while (str[i] != ')' && i < str.size() - 1)
-                                i++;
+                            size_t params_start = ++i;
+                            Parser::find_end(str, &i, ')');
                             size_t params_end = i;
                             while (str[i] != '{' && i < str.size() - 1)
                                 i++;
-                            size_t start = i + 1;
-                            while (str[i] != '}' && i < str.size() - 1)
-                                i++;
+                            size_t start = ++i;
+                            Parser::find_end(str, &i);
 
                             // remove DefinitionToken
                             buffer->pop_back();
-                            FunctionToken *func = new FunctionToken(str.substr(start, i - start));
+                            FunctionToken *func = new FunctionToken(str.substr(start, i - start - 1));
                             func->func_name = token_buffer;
                             func->func_ret_type = previous_type;
-                            err_parse err = Parser::parse(str.substr(params_start, params_end - params_start), &func->params, parser_state::PARSE_PARAMS);
+                            err_parse err = Parser::parse(str.substr(params_start, params_end - params_start - 1), &func->params, parser_state::PARSE_PARAMS);
                             if (err != err_parse::PARSE_SUCCESS)
                                 return err;
                             err = Parser::parse(func->raw, &func->body, parser_state::PARSE_STATEMENT);
@@ -309,6 +358,30 @@ err_resolve Parser::resolve(std::vector<Token *> tokens, bool debug)
     return err_resolve::RESOLVE_SUCCESS;
 }
 
+void Parser::find_end(std::string str, size_t *i, char c)
+{
+    int level = 0;
+    char start = '{';
+    if (c == ')')
+        start = '(';
+    while (*i < str.size() - 1)
+    {
+        if (str[*i] == start)
+            level++;
+        else if (str[*i] == c)
+        {
+            if (level == 0)
+            {
+                (*i)++;
+                return;
+            }
+            else
+                level--;
+        }
+        (*i)++;
+    }
+}
+
 lhc_type Parser::parse_type(std::string str)
 {
     if (str == "bool")
@@ -440,6 +513,10 @@ err_parse Parser::parse_expression_part(std::string str, std::vector<Token *> *b
                             break;
                         }
                     }
+                    if (*i < str.size() - 1)
+                        (*i)++;
+                    while (CHAR_IS_NUM(str[*i]) && *i < str.size() - 1)
+                        token_buffer->push_back(str[(*i)++]);
 
                     if (is_num)
                         buffer->push_back(new LiteralInt(prepend + *token_buffer));

@@ -11,9 +11,8 @@
 ACUTE TODO:
  - signed comparisons
  - operator (order)
- - if parse
- - inline if
  - return value from calltoken
+ - memory calculation
 
 0x00 reserved
 0x01/0x02 instruction pointer
