@@ -13,13 +13,29 @@ Variable *Assembler::find_var(std::string var_name, std::vector<Variable *> vars
         if (var_name == vars[i]->var_name)
             return vars[i];
 
+    std::cout << "ERROR: Could not find variable \"" << var_name << "\"" << std::endl;
+
     return nullptr;
 }
 
 uint32_t Assembler::label_counter = 0;
 
-err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, std::string comment)
+err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, bool b)
 {
+    Variable *exp_res = Assembler::find_var("exp_res", vars);
+    Variable *exp_res_1;
+    Variable *exp_res_2;
+    if (b)
+    {
+        exp_res_1 = Assembler::find_var("exp_res_b1", vars);
+        exp_res_2 = Assembler::find_var("exp_res_b2", vars);
+    }
+    else
+    {
+        exp_res_1 = Assembler::find_var("exp_res_a1", vars);
+        exp_res_2 = Assembler::find_var("exp_res_a2", vars);
+    }
+
     if (exp->content.size() > 0)
     {
         if (dynamic_cast<VariableToken *>(exp->content[0]) != nullptr)
@@ -33,56 +49,54 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             buffer->push_back(new Instruction(1 << INS_B_IN, 0));
             if (dynamic_cast<VariableToken *>(exp->content[0])->negative)
                 buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, exp->content[0]->raw));
             buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
         }
         else if (dynamic_cast<LiteralInt *>(exp->content[0]) != nullptr)
         {
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, exp->content[0]->raw));
             buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<LiteralInt *>(exp->content[0])->data));
         }
         else if (dynamic_cast<LiteralChar *>(exp->content[0]) != nullptr)
         {
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, exp->content[0]->raw));
             buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<LiteralChar *>(exp->content[0])->data));
         }
         else if (dynamic_cast<LiteralBool *>(exp->content[0]) != nullptr)
         {
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, exp->content[0]->raw));
             buffer->push_back(new Instruction(1 << INS_RAM_IN, dynamic_cast<LiteralBool *>(exp->content[0])->data ? 1 : 0));
         }
         else if (dynamic_cast<OperatorToken *>(exp->content[0]) != nullptr)
         {
             OperatorToken *op = dynamic_cast<OperatorToken *>(exp->content[0]);
 
-            // TODO: multiple res vars or something? dynamic?
-            //  -> if b is an op again, RAM_EXP_RES1 would be overwritten
-            // are two per operand -> 4 enough?
-            //  -> probably
+            // first operand into res
+            // second operand into _1
+            // solve ops recursively
 
-            // TODO: try simplifying evaluation of operands
+            // TODO: try simplifying evaluation of operands, if operation immediately uses ALU
             //  -> if b is literal, [Literal] -> B would be possible
             //  -> if b is variable, RAM -> B would be possible
             //  -> if b is operator, we have a problem
-            // if alu is required again, don't immediately load (can be ignored if resolved bottom-top)
 
-            err_compile err = evaluate_exp(op->a, vars, buffer, RAM_EXP_RES1);
+            err_compile err = evaluate_exp(op->a, vars, buffer, exp_res->ram_location, true);
             if (err != err_compile::COMPILE_SUCCESS)
                 return err;
-            err = evaluate_exp(op->b, vars, buffer, RAM_EXP_RES2);
+            err = evaluate_exp(op->b, vars, buffer, exp_res_1->ram_location, true);
             if (err != err_compile::COMPILE_SUCCESS)
                 return err;
 
             if (op->op == "+" || op->op == "-")
             {
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES1));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
                 buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES2));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
                 buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
                 if (op->op == "-")
-                    buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN)); // Invert A if neccessary
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into, comment));     // Add into target
-                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+                    buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN, 0, "-")); // Invert A if neccessary
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN, 0, op->raw));
             }
             else if (op->op == "*")
             {
@@ -96,6 +110,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             }
             else if (op->op == "%")
             {
+                // TODO
                 std::cout << "WARNING: " << op->op << " ignored" << std::endl;
             }
             else if (op->op == "<" || op->op == ">" || op->op == "<=" || op->op == ">=" || op->op == "==")
@@ -103,9 +118,9 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                 std::string l_true = op->op + std::to_string(label_counter) + "true";
                 std::string l_false = op->op + std::to_string(label_counter++) + "false";
 
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES1));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
                 buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES2));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
                 buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
                 buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
                 buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN, 0, "delta (" + op->raw + ")"));
@@ -173,7 +188,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                 {
                     if (op->op == "<=" || op->op == ">=")
                     {
-                        buffer->push_back(new Instruction(1 << INS_B_IN, 0xFF));
+                        buffer->push_back(new Instruction(1 << INS_B_IN, 255));
                         buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN, 0, "delta - 1"));
                     }
 
@@ -183,7 +198,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
 
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, "false"));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
@@ -191,7 +206,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 
                     buffer->push_back(new Instruction(l_true));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, "true"));
 
                     buffer->push_back(new Instruction(l_false));
                 }
@@ -217,6 +232,12 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 
 err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main)
 {
+    Variable *exp_res = Assembler::find_var("exp_res", vars);
+    Variable *exp_res_a1 = Assembler::find_var("exp_res_a1", vars);
+    Variable *exp_res_a2 = Assembler::find_var("exp_res_a2", vars);
+    Variable *exp_res_b1 = Assembler::find_var("exp_res_b1", vars);
+    Variable *exp_res_b2 = Assembler::find_var("exp_res_b2", vars);
+
     for (size_t i = 0; i < tokens.size(); i++)
     {
         if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
@@ -230,7 +251,7 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
 
             if (assignment->expression != nullptr)
             {
-                err_compile err = Assembler::evaluate_exp(assignment->expression, vars, buffer, var->ram_location, var->var_name);
+                err_compile err = Assembler::evaluate_exp(assignment->expression, vars, buffer, var->ram_location);
                 if (err != err_compile::COMPILE_SUCCESS)
                     return err;
             }
@@ -248,7 +269,7 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             {
                 if (exp != nullptr)
                 {
-                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, 0x05, call->func_name);
+                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, 0x05);
                     if (err != err_compile::COMPILE_SUCCESS)
                         return err;
                 }
@@ -288,9 +309,9 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
         {
             std::string l_if = "if" + std::to_string(label_counter);
             IfStatement *statement = dynamic_cast<IfStatement *>(tokens[i]);
-            Assembler::evaluate_exp(statement->condition, vars, buffer, RAM_EXP_RES1);
+            Assembler::evaluate_exp(statement->condition, vars, buffer, exp_res->ram_location);
             // get expression result, subtract 1
-            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, RAM_EXP_RES1));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
             buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
             buffer->push_back(new Instruction(1 << INS_B_IN, 255));
             buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN));
@@ -332,6 +353,19 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
 
     FunctionToken *main = nullptr;
     std::vector<DefinitionToken *> var_defs = {};
+
+    var_defs.push_back(new DefinitionToken("exp_res"));
+    var_defs.push_back(new DefinitionToken("exp_res_a1"));
+    var_defs.push_back(new DefinitionToken("exp_res_a2"));
+    var_defs.push_back(new DefinitionToken("exp_res_b1"));
+    var_defs.push_back(new DefinitionToken("exp_res_b2"));
+
+    for (size_t i = 0; i < var_defs.size(); i++)
+    {
+        var_defs[i]->var_type = lhc_type::INT8;
+        var_defs[i]->resolve();
+    }
+
     for (size_t i = 0; i < tokens.size(); i++)
     {
         if (dynamic_cast<FunctionToken *>(tokens[i]) != nullptr)
@@ -349,10 +383,7 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
         if (dynamic_cast<DefinitionToken *>(main->body[i]) != nullptr)
             var_defs.push_back(dynamic_cast<DefinitionToken *>(main->body[i]));
 
-    // var offset:
-    //  8 default offset
-    //  2 expression results
-    uint8_t var_offset = 10;
+    uint8_t var_offset = 8; // reserved bytes
     std::vector<Variable *> vars = {};
     for (size_t i = 0; i < var_defs.size(); i++)
         vars.push_back(new Variable(var_defs[i]->var_type, var_defs[i]->var_name, i + var_offset));
@@ -369,7 +400,7 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
                 return err_compile::COMPILE_UNDEF_VAR;
             if (assignment->expression != nullptr)
             {
-                err_compile err = Assembler::evaluate_exp(assignment->expression, vars, buffer, var->ram_location, var->var_name);
+                err_compile err = Assembler::evaluate_exp(assignment->expression, vars, buffer, var->ram_location);
                 if (err != err_compile::COMPILE_SUCCESS)
                     return err;
             }

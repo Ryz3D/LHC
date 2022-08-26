@@ -23,9 +23,6 @@
 #include "instruction.h"
 #include "defines.h"
 
-#define RAM_EXP_RES1 8
-#define RAM_EXP_RES2 9
-
 class Variable
 {
 public:
@@ -39,7 +36,7 @@ class Assembler
 {
 public:
     static Variable *find_var(std::string var_name, std::vector<Variable *> vars);
-    static err_compile evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, std::string comment = "");
+    static err_compile evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, bool b = false);
     static err_compile compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main);
 
     static err_compile compile(std::vector<Token *> tokens, std::vector<Instruction *> *buffer);

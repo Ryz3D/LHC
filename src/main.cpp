@@ -28,6 +28,7 @@ void help()
 {
     std::cout << "Usage: lhc [Options] [Input] [Output]" << std::endl;
     std::cout << "\tOptions:" << std::endl;
+    std::cout << "\t\t-nv Non-verbose: Only output critical information" << std::endl;
     std::cout << "\t\t-s [steps || 10000] Run simulation" << std::endl;
     std::cout << "\t\t-d Simulation debug output" << std::endl;
     std::cout << "\tInput:" << std::endl;
@@ -46,6 +47,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    bool nv = false;
     size_t sim_steps = 0;
     bool sim_debug = false;
     std::string in_c = "";
@@ -55,7 +57,9 @@ int main(int argc, char *argv[])
     for (int i = 0; i < argc; i++)
     {
         std::string a = std::string(argv[i]);
-        if (a == "-s")
+        if (a == "-nv")
+            nv = true;
+        else if (a == "-s")
         {
             sim_steps = 10000;
             if (i < argc - 1)
@@ -125,13 +129,33 @@ int main(int argc, char *argv[])
     if (sim_steps > 0)
     {
         Sim cpu = Sim();
-        std::cout << "Simulation started" << std::endl;
+        if (!nv)
+            std::cout << "Simulation started" << std::endl;
         cpu.execute(program, sim_steps, sim_debug);
         if (!cpu.output_buffer.empty())
-            std::cout << "Output: " << cpu.output_buffer << std::endl;
+            std::cout << "Simulated Output: " << cpu.output_buffer << std::endl;
     }
 
-    std::cout << "LHC Done!" << std::endl;
+    int ram_usage = 8;
+    for (size_t i = 0; i < binary.size(); i += 2)
+        if (binary[i] & (1 << INS_RAM_P_IN) && binary[i + 1] > 0)
+            if (binary[i + 1] >= ram_usage)
+                ram_usage = binary[i + 1] + 1;
+    if (!nv)
+    {
+        std::cout << "ROM: " << binary.size() / 2 << "/65536 B";
+        if (binary.size() / 2 > 65536)
+            std::cout << " (OVERFLOW!)";
+        std::cout << std::endl;
+        std::cout << "RAM: " << ram_usage << "/256 B" << std::endl;
+        if (ram_usage > 256)
+            std::cout << " (OVERFLOW!)";
+        std::cout << std::endl;
+
+        std::cout << "LHC Done!" << std::endl;
+    }
+
+    // TODO: check multiple bus-outputs before outputting binary
 
     return 0;
 }

@@ -11,6 +11,7 @@
 class DefinitionToken : public Token
 {
 public:
+    using Token::Token;
     bool is_supported() override;
     void resolve() override;
     lhc_type var_type = lhc_type::INVALID;

@@ -7,5 +7,6 @@ bool DefinitionToken::is_supported()
 
 void DefinitionToken::resolve()
 {
+    var_name = raw;
     resolved = true;
 }

@@ -41,10 +41,9 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
             {
                 if (!Parser::parse_keyword(token_buffer, str, buffer, &i))
                 {
-                    DefinitionToken *def = new DefinitionToken();
+                    DefinitionToken *def = new DefinitionToken(token_buffer);
                     if (previous_type != lhc_type::INVALID)
                     {
-                        def->var_name = token_buffer;
                         def->var_type = previous_type;
                         buffer->push_back(def);
                     }

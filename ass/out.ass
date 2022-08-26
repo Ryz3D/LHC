@@ -1,60 +1,60 @@
-10 -> RAM_P # a
+13 -> RAM_P # 3
 3 -> RAM
-11 -> RAM_P # b
+14 -> RAM_P # 2
 2 -> RAM
-12 -> RAM_P # c
+15 -> RAM_P # 0
 0 -> RAM
-11 -> RAM_P
+14 -> RAM_P
 RAM -> A
 0 -> B
-8 -> RAM_P
+8 -> RAM_P # b
 ADD -> RAM
-9 -> RAM_P
+9 -> RAM_P # 1
 1 -> RAM
 8 -> RAM_P
 RAM -> B # RES1 -> B
 9 -> RAM_P
 RAM -> A # RES2 -> A
-INV -> A
-13 -> RAM_P # i
-ADD -> RAM
+INV -> A # -
+16 -> RAM_P
+ADD -> RAM # b - 1
 ;div
-	12 -> RAM_P
+	15 -> RAM_P
 	RAM -> A
 	0 -> B
-	8 -> RAM_P
+	8 -> RAM_P # c
 	ADD -> RAM
-	10 -> RAM_P
+	13 -> RAM_P
 	RAM -> A
 	0 -> B
-	9 -> RAM_P
+	9 -> RAM_P # a
 	ADD -> RAM
 	8 -> RAM_P
 	RAM -> B # RES1 -> B
 	9 -> RAM_P
 	RAM -> A # RES2 -> A
-	12 -> RAM_P # c
-	ADD -> RAM
-	13 -> RAM_P
+	15 -> RAM_P
+	ADD -> RAM # c + a
+	16 -> RAM_P
 	RAM -> A
 	0 -> B
-	8 -> RAM_P
+	8 -> RAM_P # i
 	ADD -> RAM
-	9 -> RAM_P
+	9 -> RAM_P # 1
 	1 -> RAM
 	8 -> RAM_P
 	RAM -> B # RES1 -> B
 	9 -> RAM_P
 	RAM -> A # RES2 -> A
-	INV -> A
-	13 -> RAM_P # i
+	INV -> A # -
+	16 -> RAM_P
 	ADD -> RAM
-	13 -> RAM_P
+	16 -> RAM_P
 	RAM -> A
 	0 -> B
-	8 -> RAM_P
+	8 -> RAM_P # i
 	ADD -> RAM
-	9 -> RAM_P
+	9 -> RAM_P # 0
 	0 -> RAM
 	8 -> RAM_P
 	RAM -> B # RES1 -> B
@@ -68,14 +68,14 @@ ADD -> RAM
 	4 -> RAM_P
 	:<0true -> RAM
 	8 -> RAM_P
-	0 -> RAM
+	0 -> RAM # false
 	1 -> RAM_P
 	:<0false -> RAM
 	2 -> RAM_P
 	:<0false -> RAM
 ;<0true
 	8 -> RAM_P
-	1 -> RAM
+	1 -> RAM # true
 ;<0false
 	8 -> RAM_P
 	RAM -> A
@@ -95,21 +95,21 @@ ADD -> RAM
 	2 -> RAM_P
 	:div -> RAM
 ;end
-	12 -> RAM_P
+	15 -> RAM_P
 	RAM -> A
 	0 -> B
-	8 -> RAM_P
+	8 -> RAM_P # c
 	ADD -> RAM
-	9 -> RAM_P
+	9 -> RAM_P # '0'
 	48 -> RAM
 	8 -> RAM_P
 	RAM -> B # RES1 -> B
 	9 -> RAM_P
 	RAM -> A # RES2 -> A
-	12 -> RAM_P # c
-	ADD -> RAM
-	12 -> RAM_P
+	15 -> RAM_P
+	ADD -> RAM # c + '0'
+	15 -> RAM_P
 	RAM -> A
 	0 -> B
-	5 -> RAM_P # putchar
+	5 -> RAM_P # c
 	ADD -> RAM
