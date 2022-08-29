@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <math.h>
 
 #include "fs.h"
 #include "parser.h"
@@ -12,7 +13,6 @@ ACUTE TODO:
  - signed comparisons
  - operator (order)
  - return value from calltoken
- - memory calculation
 
 0x00 reserved
 0x01/0x02 instruction pointer
@@ -133,7 +133,9 @@ int main(int argc, char *argv[])
             std::cout << "Simulation started" << std::endl;
         cpu.execute(program, sim_steps, sim_debug);
         if (!cpu.output_buffer.empty())
-            std::cout << "Simulated Output: " << cpu.output_buffer << std::endl;
+            std::cout << "Simulated Output:" << std::endl
+                      << cpu.output_buffer << std::endl
+                      << "--------------------------------" << std::endl;
     }
 
     int ram_usage = 8;
@@ -143,11 +145,14 @@ int main(int argc, char *argv[])
                 ram_usage = binary[i + 1] + 1;
     if (!nv)
     {
-        std::cout << "ROM: " << binary.size() / 2 << "/65536 B";
+        int p_rom = round(binary.size() / 327.68);
+        std::cout << "ROM: " << binary.size() / 2 << "/65536 B (" << p_rom << "%)";
         if (binary.size() / 2 > 65536)
             std::cout << " (OVERFLOW!)";
         std::cout << std::endl;
-        std::cout << "RAM: " << ram_usage << "/256 B" << std::endl;
+
+        int p_ram = round(ram_usage / 2.56);
+        std::cout << "RAM: " << ram_usage << "/256 B (" << p_ram << "%)" << std::endl;
         if (ram_usage > 256)
             std::cout << " (OVERFLOW!)";
         std::cout << std::endl;

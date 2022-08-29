@@ -307,7 +307,7 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
         }
         else if (dynamic_cast<IfStatement *>(tokens[i]) != nullptr)
         {
-            std::string l_if = "if" + std::to_string(label_counter);
+            std::string l_if = "if" + std::to_string(label_counter++);
             IfStatement *statement = dynamic_cast<IfStatement *>(tokens[i]);
             Assembler::evaluate_exp(statement->condition, vars, buffer, exp_res->ram_location);
             // get expression result, subtract 1
@@ -327,8 +327,44 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
         }
         else if (dynamic_cast<WhileLoop *>(tokens[i]) != nullptr)
         {
-            // TODO
-            std::cout << "WARNING: while loop ignored" << std::endl;
+            std::string l_start = "while_loop" + std::to_string(label_counter);
+            std::string l_end = "while_end" + std::to_string(label_counter++);
+            WhileLoop *loop = dynamic_cast<WhileLoop *>(tokens[i]);
+
+            buffer->push_back(new Instruction(l_start));
+            Assembler::evaluate_exp(loop->condition, vars, buffer, exp_res->ram_location);
+            // get expression result, subtract 1
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
+            buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+            buffer->push_back(new Instruction(1 << INS_B_IN, 255));
+            buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN));
+            // cond-jump after body
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+
+            Assembler::compile_statements(loop->body, vars, buffer, false);
+
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_start));
+            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_start));
+
+            buffer->push_back(new Instruction(l_end));
+        }
+        else if (dynamic_cast<ForLoop *>(tokens[i]) != nullptr)
+        {
+            ForLoop *floop = dynamic_cast<ForLoop *>(tokens[i]);
+            WhileLoop *wloop = new WhileLoop(floop->raw);
+            wloop->condition = floop->condition;
+            wloop->body = floop->body;
+            for (size_t j = 0; j < floop->append.size(); j++)
+                wloop->body.push_back(floop->append[j]);
+
+            std::vector<Token *> tokens = {wloop};
+            Assembler::compile_statements(floop->prepend, vars, buffer, false);
+            Assembler::compile_statements(tokens, vars, buffer, false);
         }
         else if (dynamic_cast<ReturnToken *>(tokens[i]) != nullptr)
         {

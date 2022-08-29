@@ -2,22 +2,23 @@
 
 int main()
 {
-    int a = 16;
+    int a = 3;
     int b = 2;
 
-    int i = -1;
+    int c = 0;
+    int i = b - 1;
 
 div:
-    i++;
-    a -= b;
-    if (a < 0)
+    c += a;
+    i--;
+    if (i < 0)
     {
         goto end;
     }
     goto div;
 end:
-    i += '0';
-    putchar(i);
+    c += '0';
+    putchar(c);
 
     return 0;
 }

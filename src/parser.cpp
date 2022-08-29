@@ -112,7 +112,49 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                                 if (state != parser_state::PARSE_ANY && state != parser_state::PARSE_STATEMENT)
                                     return err_parse::PARSE_UNEXPECTED_STATEMENT;
 
-                                std::cout << "WARNING: for loop not supported (" << args << ")" << std::endl;
+                                while (str[i] != '{' && i < str.size() - 1)
+                                    i++;
+                                size_t start = ++i;
+                                Parser::find_end(str, &i);
+                                std::string body = str.substr(start, i - start - 1);
+                                std::string prepend = "", condition = "", append = "";
+                                for (size_t j = 0; j < args.size(); j++)
+                                {
+                                    if (args[j] == ';')
+                                    {
+                                        if (prepend.size() == 0)
+                                        {
+                                            prepend = append;
+                                            append.clear();
+                                        }
+                                        else if (condition.size() == 0)
+                                        {
+                                            condition = append;
+                                            append.clear();
+                                        }
+                                        else
+                                            append.clear();
+                                    }
+                                    else
+                                        append.push_back(args[j]);
+                                }
+
+                                ForLoop *loop = new ForLoop("for (" + args + ") {" + body + "}");
+                                loop->condition = new ExpressionToken(condition);
+                                err_parse err = Parser::parse(prepend, &loop->prepend, parser_state::PARSE_STATEMENT);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                err = Parser::parse(condition, &loop->condition->content, parser_state::PARSE_EXPRESSION);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                err = Parser::parse(append, &loop->append, parser_state::PARSE_STATEMENT);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+                                err = Parser::parse(body, &loop->body, parser_state::PARSE_STATEMENT);
+                                if (err != err_parse::PARSE_SUCCESS)
+                                    return err;
+
+                                buffer->push_back(loop);
                             }
                             else
                             {
@@ -237,8 +279,6 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                             }
                         }
                     }
-                    else
-                        std::cout << "(" << state << "): " << token_buffer << " " << str[i] << " at " << (int)i << std::endl;
                 }
             }
 

@@ -9,6 +9,7 @@
 #include "tokens/call.h"
 #include "tokens/definition.h"
 #include "tokens/expression.h"
+#include "tokens/for.h"
 #include "tokens/function.h"
 #include "tokens/goto.h"
 #include "tokens/if.h"
