@@ -11,7 +11,7 @@ _(very nearly pretty much)_
 - Basic variables (`uint_8`, `int_8`, `bool`)
   - All variables are treated as global for now
 - Operators
-  - `+`, `-`, `*`, `/` also as assignment: `+=`, `-=`, `*=`, `/=`
+  - `+`, `-`, `*`, `/` also as assignment: `+=`, `-=`, `*=`, `/=` and `++`, `--`
   - `<`, `>`, `<=`, `>=`, `==`, `!=`, `||`, `&&`
 - `if` by conditional jumps
 - `while` by conditional and fixed jumps
