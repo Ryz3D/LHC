@@ -2,14 +2,33 @@
 
 int main()
 {
-    int i = 2;
-    int b;
+    int x;
+    int y;
+    int d;
 
-    for (i = 0; i < 10; i++)
+    for (x = 0; x <= 9; x++)
     {
-        b = i + '0';
-        putchar(b);
-        putchar(' ');
+        for (y = 2; y <= 5; y += 3)
+        {
+            d = x + '0';
+            putchar(d);
+            putchar(' ');
+            d = y + '0';
+            putchar(d);
+            putchar(' ');
+            if (x == 6)
+            {
+                putchar('X');
+                putchar(' ');
+                putchar('I');
+                putchar('S');
+                putchar('T');
+                putchar(' ');
+                putchar('6');
+                putchar('!');
+                putchar(' ');
+            }
+        }
     }
 
     return 0;

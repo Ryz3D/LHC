@@ -5,7 +5,7 @@ I fully intend to build a machine capable of executing the generated binaries in
 
 ## Implemented
 
-_(pretty much)_
+_(very nearly pretty much)_
 
 - Parsing .c files
 - Basic variables (`uint_8`, `int_8`, `bool`)
@@ -13,6 +13,9 @@ _(pretty much)_
 - Operators
   - `+`, `-`, `*`, `/` also as assignment: `+=`, `-=`, `*=`, `/=`
   - `<`, `>`, `<=`, `>=`, `==`, `!=`, `||`, `&&`
+- `if` by conditional jumps
+- `while` by conditional and fixed jumps
+- `for` by transformation to `while`
 - Custom CPU simulator (and brainfuck, just for fun)
 - Output and parse custom assembly
   - Can be used as an assembly debugger/simulator and assembly->binary converter
@@ -20,7 +23,6 @@ _(pretty much)_
 
 ## TO-DO
 
-- Support `if` by conditional jumps
 - Handle `else` by jumping past by default
 - Multiplication, division and modulo
 - Multi-byte types
@@ -29,14 +31,12 @@ _(pretty much)_
 
 ## Planned
 
-- Actual loops (`while`, `for`)
 - At least other integer types (8-32bit + signed `int`s)
-- Support as many logical operators as possible
 - Simple optimizations on assembly
   - Setting `RAM_P` multiple times before accessing RAM
   - No bus-reads -> nop
   - Only set upper instruction pointer byte if neccessary (Check location of jump instruction)
-- Custom functions
+  - Check if register is already set to literal values
 
 ## _(notes for version two)_
 
@@ -46,3 +46,5 @@ _(pretty much)_
   - Use `struct` for Token types
     - I could write it in C...
 - Proper error messages (show problematic line/keyword)
+- Proper functions
+  - Heap, stack
