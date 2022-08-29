@@ -297,26 +297,41 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
 
     if (state == parser_state::PARSE_ANY || state == parser_state::PARSE_EXPRESSION)
     {
-        if (buffer->empty() || buffer->size() == 1)
+        if (buffer->size() <= 1)
             return err_parse::PARSE_SUCCESS;
-        else if (buffer->size() == 2)
-        {
-            OperatorToken *op = new OperatorToken();
-            // TODO: figure out type in resolve
-            op->op_type = lhc_type::INVALID;
-            op->raw = buffer->at(0)->raw + " " + exp_operators[0] + " " + buffer->at(1)->raw;
-            op->a = new ExpressionToken();
-            op->a->content.push_back(buffer->at(0));
-            op->op = exp_operators[0];
-            op->b = new ExpressionToken();
-            op->b->content.push_back(buffer->at(1));
-            buffer->clear();
-            buffer->push_back(op);
-        }
         else
         {
-            // TODO
-            std::cout << "WARNING: Expression with " << buffer->size() << " tokens (\"" << str << "\") is not supported yet... :(";
+            if (buffer->size() < exp_operators.size() + 1)
+                return err_parse::PARSE_UNEXPECTED_OP;
+            if (buffer->size() > exp_operators.size() + 1)
+                return err_parse::PARSE_UNEXPECTED_TOKEN;
+
+            for (int8_t l = 0; l < 3; l++)
+            {
+                size_t j = 0;
+                while (j < exp_operators.size())
+                {
+                    if (Parser::get_op_level(exp_operators[j]) == l)
+                    {
+                        Token *a = buffer->at(j);
+                        Token *b = buffer->at(j + 1);
+                        OperatorToken *op = new OperatorToken(a->raw + " " + exp_operators[j] + " " + b->raw);
+                        // TODO: figure out type in resolve
+                        op->op_type = lhc_type::INT8;
+                        op->a = new ExpressionToken(a->raw);
+                        op->a->content.push_back(a);
+                        op->op = exp_operators[j];
+                        op->b = new ExpressionToken(b->raw);
+                        op->b->content.push_back(b);
+
+                        exp_operators.erase(exp_operators.begin() + j);
+                        buffer->at(j) = op;
+                        buffer->erase(buffer->begin() + j + 1);
+                    }
+                    else
+                        j++;
+                }
+            }
         }
     }
 
@@ -632,4 +647,18 @@ err_parse Parser::parse_expression_part(std::string str, std::vector<Token *> *b
     }
 
     return err_parse::PARSE_SUCCESS;
+}
+
+int Parser::get_op_level(std::string op)
+{
+    std::vector<std::vector<std::string>> op_levels = {
+        {"*", "/", "%"},
+        {"+", "-"},
+    };
+
+    for (size_t l = 0; l < op_levels.size(); l++)
+        for (size_t i = 0; i < op_levels[l].size(); i++)
+            if (op == op_levels[l][i])
+                return l;
+    return op_levels.size();
 }

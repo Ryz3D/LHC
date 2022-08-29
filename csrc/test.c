@@ -2,19 +2,18 @@
 
 int main()
 {
-    int x;
-    int y;
-    int d;
+    int z = 2;
+    z--;
+    putchar('0' + 5 + 1 - 3 + z + z);
+    putchar(' ');
 
-    for (x = 0; x <= 9; x++)
+    for (int x = 0; x <= 9; x++)
     {
-        for (y = 2; y <= 5; y += 3)
+        for (int y = 2; y <= 5; y += 3)
         {
-            d = x + '0';
-            putchar(d);
+            putchar('0' + x);
             putchar(' ');
-            d = y + '0';
-            putchar(d);
+            putchar('0' + y);
             putchar(' ');
             if (x == 6)
             {

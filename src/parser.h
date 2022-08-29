@@ -42,4 +42,5 @@ private:
     static lhc_type parse_type(std::string str);
     static bool parse_keyword(std::string kw, std::string str, std::vector<Token *> *buffer, size_t *i);
     static err_parse parse_expression_part(std::string str, std::vector<Token *> *buffer, std::vector<std::string> *exp_operators, size_t *i, std::string *token_buffer);
+    static int get_op_level(std::string op);
 };

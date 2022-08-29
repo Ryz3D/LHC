@@ -1,10 +1,22 @@
 #include "assembler.h"
 
+uint32_t Assembler::label_counter = 0;
+
 Variable::Variable(lhc_type var_type, std::string var_name, uint32_t ram_location)
 {
     this->var_type = var_type;
     this->var_name = var_name;
     this->ram_location = ram_location;
+}
+
+void Assembler::get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs)
+{
+    for (size_t i = 0; i < tokens.size(); i++)
+    {
+        if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
+            var_defs->push_back(dynamic_cast<DefinitionToken *>(tokens[i]));
+        Assembler::get_defs(tokens[i]->get_children(), var_defs);
+    }
 }
 
 Variable *Assembler::find_var(std::string var_name, std::vector<Variable *> vars)
@@ -17,8 +29,6 @@ Variable *Assembler::find_var(std::string var_name, std::vector<Variable *> vars
 
     return nullptr;
 }
-
-uint32_t Assembler::label_counter = 0;
 
 err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, bool b)
 {
@@ -213,8 +223,34 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             }
             else if (op->op == "||" || op->op == "&&")
             {
-                // TODO
-                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
+                std::string label = op->op + std::to_string(label_counter++);
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN, 0, "sum (" + op->raw + ")"));
+                buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
+
+                if (op->op == "&&")
+                {
+                    buffer->push_back(new Instruction(1 << INS_B_IN, 1));
+                    buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN));
+                }
+
+                buffer->push_back(new Instruction(1 << INS_B_IN, 0));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, "true"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, label));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, label));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, "false"));
+
+                buffer->push_back(new Instruction(label));
             }
             else
                 return err_compile::COMPILE_ILLEGAL_OP;
@@ -396,6 +432,8 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
     var_defs.push_back(new DefinitionToken("exp_res_b1"));
     var_defs.push_back(new DefinitionToken("exp_res_b2"));
 
+    Assembler::get_defs(tokens, &var_defs);
+
     for (size_t i = 0; i < var_defs.size(); i++)
     {
         var_defs[i]->var_type = lhc_type::INT8;
@@ -409,8 +447,6 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
             if (dynamic_cast<FunctionToken *>(tokens[i])->func_name == "main")
                 main = dynamic_cast<FunctionToken *>(tokens[i]);
         }
-        else if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
-            var_defs.push_back(dynamic_cast<DefinitionToken *>(tokens[i]));
     }
     if (main == nullptr)
         return err_compile::COMPILE_NO_MAIN;

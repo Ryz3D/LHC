@@ -12,6 +12,7 @@
 class OperatorToken : public Token
 {
 public:
+    using Token::Token;
     bool is_supported() override;
     std::vector<Token *> get_children() override;
     void resolve() override;
