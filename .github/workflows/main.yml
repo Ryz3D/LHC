@@ -41,7 +41,7 @@ jobs:
         run: make
       
       - name: Add extension
-        run: rename lhc lhc.exe
+        run: ren "lhc" "lhc.exe"
 
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
