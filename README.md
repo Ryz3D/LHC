@@ -16,6 +16,10 @@ _(very nearly pretty much)_
 - `if` by conditional jumps
 - `while` by conditional and fixed jumps
 - `for` by transformation to `while`
+- Basic functions
+  - `putchar` writes to RAM 0x05
+  - `getchar` reads from RAM 0x05
+  - `printf` for string literal only
 - Custom CPU simulator (and brainfuck, just for fun)
 - Output and parse custom assembly
   - Can be used as an assembly debugger/simulator and assembly->binary converter

@@ -2,10 +2,9 @@
 
 int main()
 {
-    for (int i = '0'; i <= '9'; i++)
+    for (int i = 'A'; i <= 'Z' + 1 /* TODO: this bug here */; i++)
     {
         putchar(i);
-        printf(" ");
     }
 
     return 0;

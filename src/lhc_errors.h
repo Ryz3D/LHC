@@ -39,6 +39,5 @@ enum err_assemble
 {
     ASSEMBLE_SUCCESS,
     ASSEMBLE_UNDEF_LABEL,  // no label found for label literal
-    ASSEMBLE_RAM_OVERFLOW, // TODO
-    ASSEMBLE_ROM_OVERFLOW  // TODO
+    ASSEMBLE_BUS_COLLISION // multiple outputs to bus in one instruction
 };

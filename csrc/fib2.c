@@ -1,4 +1,4 @@
-#include "g_include.h"
+#include "lhc.h"
 
 int main()
 {

@@ -317,6 +317,20 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
                 // TODO
                 std::cout << "WARNING: " << call->func_name << " call ignored" << std::endl;
             }
+            else if (call->func_name == "printf")
+            {
+                if (exp != nullptr)
+                {
+                    LiteralString *str = nullptr;
+                    if (exp->content.size() > 0)
+                        str = dynamic_cast<LiteralString *>(exp->content[0]);
+                    if (str == nullptr)
+                        std::cout << "WARNING: printf only supports string literals" << std::endl;
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x05));
+                    for (size_t j = 0; j < str->data.size(); j++)
+                        buffer->push_back(new Instruction(1 << INS_RAM_IN, str->data[j], str->data.substr(j, 1)));
+                }
+            }
             else if (call->func_name == "print_uint")
             {
                 // TODO
@@ -547,6 +561,22 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
             buffer->push_back(program[i]->control_word);
             buffer->push_back((uint8_t)program[i]->literal);
         }
+    }
+
+    for (size_t i = 0; i < buffer->size(); i += 2)
+    {
+        uint8_t outputs = 0;
+        if (buffer->at(i) & 1 << INS_RAM_OUT)
+            outputs++;
+        if (buffer->at(i) & 1 << INS_RAM_P_OUT)
+            outputs++;
+        if (buffer->at(i) & 1 << INS_ALU_ADD)
+            outputs++;
+        if (buffer->at(i) & 1 << INS_ALU_INV)
+            outputs++;
+
+        if (outputs > 1)
+            return err_assemble::ASSEMBLE_BUS_COLLISION;
     }
 
     return err_assemble::ASSEMBLE_SUCCESS;

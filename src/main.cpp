@@ -11,7 +11,6 @@
 /*
 ACUTE TODO:
  - signed comparisons
- - operator (order)
  - return value from calltoken
 
 0x00 reserved
@@ -133,9 +132,13 @@ int main(int argc, char *argv[])
             std::cout << "Simulation started" << std::endl;
         cpu.execute(program, sim_steps, sim_debug);
         if (!cpu.output_buffer.empty())
-            std::cout << "Simulated Output:" << std::endl
-                      << cpu.output_buffer << std::endl
-                      << "--------------------------------" << std::endl;
+        {
+            if (!nv)
+                std::cout << "Simulated Output:" << std::endl;
+            std::cout << cpu.output_buffer << std::endl;
+            if (!nv)
+                std::cout << "--------------------------------" << std::endl;
+        }
     }
 
     int ram_usage = 8;
@@ -161,8 +164,6 @@ int main(int argc, char *argv[])
 
         std::cout << "LHC Done!" << std::endl;
     }
-
-    // TODO: check multiple bus-outputs before outputting binary
 
     return 0;
 }

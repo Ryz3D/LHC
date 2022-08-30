@@ -1,71 +1,59 @@
-#include "g_include.h"
+#include "lhc.h"
 
 // DOES NOT RUN:
-//  - multiple operators
 //  - 32 bit integers
-
-int x;
-int y;
-int z1;
-int z2;
-int z3;
-int iter;
 
 int main()
 {
-    y = -200;
-
-fory:
-    x = -150;
-
-forx:
-    z1 = 0;
-    z2 = 0;
-    iter = 0;
-
-foriter:
-    z3 = z1;
-    z1 = (z1 * z1 - z2 * z2) / 100 + x;
-    z2 = (2 * z3 * z2) / 100 + y;
-
-    iter++;
-    if (iter < 250 && z1 < 200 && z2 < 200)
+    for (int y = -200; y < 200; y += 2)
     {
-        goto foriter;
-    }
+        for (int x = -150; x < 50; x += 2)
+        {
+            int iter;
+            int z1 = 0;
+            int z2 = 0;
 
-    if (iter < 4)
-    {
-        putchar(' ');
-        goto outend;
-    }
-    if (iter < 6)
-    {
-        putchar('.');
-        goto outend;
-    }
-    if (iter < 10)
-    {
-        putchar('-');
-        goto outend;
-    }
-    if (iter < 250)
-    {
-        putchar('*');
-        goto outend;
-    }
-    putchar('#');
+            for (iter = 0; iter < 250; iter++)
+            {
+                int z3 = z1;
+                z1 = z1 * z1 - z2 * z2;
+                z2 = 2 * z3 * z2;
+                z1 = z1 / 100 + x;
+                z2 = z2 / 100 + y;
 
-outend:
-    x += 2;
-    if (x < 50)
-        goto forx;
+                if (z1 > 200 || z2 > 200)
+                {
+                    goto iterbreak;
+                }
+            }
+        iterbreak:
 
-    putchar('\n');
+            if (iter < 4)
+            {
+                putchar(' ');
+                goto outend;
+            }
+            if (iter < 6)
+            {
+                putchar('.');
+                goto outend;
+            }
+            if (iter < 10)
+            {
+                putchar('-');
+                goto outend;
+            }
+            if (iter < 250)
+            {
+                putchar('*');
+                goto outend;
+            }
+            putchar('#');
+        outend:
+        }
 
-    y += 2;
-    if (y < 200)
-        goto fory;
+        putchar('\n');
+    }
 
     return 0;
 }

@@ -49,6 +49,7 @@
         "stdint.h": "c",
         "iomanip": "cpp",
         "xlocmon": "cpp",
-        "xloctime": "cpp"
+        "xloctime": "cpp",
+        "lhc.h": "c"
     }
 }
