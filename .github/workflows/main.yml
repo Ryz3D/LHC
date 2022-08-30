@@ -20,13 +20,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Init g++
-        uses: egor-tensin/setup-gcc@v1
-
       - uses: actions/checkout@v3
 
       - name: Linux build
-        run: g++ -O3 -o lhc src/*.cpp src/**/*.cpp
+        run: make
 
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
@@ -41,10 +38,13 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Windows build
-        run: g++ -O3 -o lhc_win.exe src\*.cpp src\**\*.cpp
+        run: make
+      
+      - name: Add extension
+        run: rename lhc lhc.exe
 
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
         with:
           name: LHC Windows
-          path: lhc_win.exe
+          path: lhc.exe
