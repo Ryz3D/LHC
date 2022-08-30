@@ -10,30 +10,41 @@ on:
 
   workflow_dispatch:
 
+env:
+  MSYSTEM: MINGW64
+  MSYS2_PATH_TYPE: inherit
+  SCHEME: scheme
+
 jobs:
-  build:
+  build_ubuntu:
     runs-on: ubuntu-latest
 
     steps:
       - name: Init g++
         uses: egor-tensin/setup-gcc@v1
 
-      - name: Init MinGW
-        uses: egor-tensin/setup-mingw@v2
-
       - uses: actions/checkout@v3
 
-      - name: Create build directory
-        run: mkdir build
-
       - name: Linux build
-        run: g++ -O3 -o build/lhc src/*.cpp src/**/*.cpp
-
-      - name: Windows build
-        run: c++ -O3 -o build/lhc_win.exe src/*.cpp src/**/*.cpp
+        run: g++ -O3 -o lhc src/*.cpp src/**/*.cpp
 
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: LHC Binaries
-          path: build/*
+          name: LHC Linux
+          path: lhc
+
+  build_windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Windows build
+        run: g++ -O3 -o lhc_win.exe src/*.cpp src/**/*.cpp
+
+      - name: Upload
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: LHC Windows
+          path: lhc_win.exe
