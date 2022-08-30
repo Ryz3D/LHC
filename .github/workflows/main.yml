@@ -15,18 +15,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Init g++
         uses: egor-tensin/setup-gcc@v1
 
       - name: Init MinGW
         uses: egor-tensin/setup-mingw@v2
 
-      - name: Linux Build
+      - uses: actions/checkout@v3
+
+      - name: Create build directory
+        run: mkdir build
+
+      - name: Linux build
         run: g++ -O3 -o build/lhc src/*.cpp src/**/*.cpp
 
-      - name: Windows Build
+      - name: Windows build
         run: c++ -O3 -o build/lhc_win.exe src/*.cpp src/**/*.cpp
 
       - name: Upload
