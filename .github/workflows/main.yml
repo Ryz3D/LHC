@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_ubuntu:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +20,17 @@ jobs:
       - name: Init g++
         uses: egor-tensin/setup-gcc@v1
 
-      - name: Build
-        run: g++ -O3 -o lhc src/*.cpp src/**/*.cpp
-      
+      - name: Init MinGW
+        uses: egor-tensin/setup-mingw@v2
+
+      - name: Linux Build
+        run: g++ -O3 -o build/lhc src/*.cpp src/**/*.cpp
+
+      - name: Windows Build
+        run: c++ -O3 -o build/lhc_win.exe src/*.cpp src/**/*.cpp
+
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: LHC
-          path: lhc
+          name: LHC Binaries
+          path: build/*
