@@ -1,2 +1,2 @@
 lhc:
-	g++ -O3 -o lhc src/*.cpp src/tokens/*.cpp
+	g++ -O3 -o lhc.exe src/*.cpp src/tokens/*.cpp
