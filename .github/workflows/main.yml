@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  MSYSTEM: MINGW64
+  MSYSTEM: MINGW32
   MSYS2_PATH_TYPE: inherit
   SCHEME: scheme
 
