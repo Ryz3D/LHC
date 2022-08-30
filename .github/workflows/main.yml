@@ -25,6 +25,9 @@ jobs:
       - name: Linux build
         run: make
 
+      - name: Remove extension
+        run: mv lhc.exe lhc
+
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
         with:
@@ -39,9 +42,6 @@ jobs:
 
       - name: Windows build
         run: make
-      
-      - name: Add extension
-        run: ren "lhc" "lhc.exe"
 
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
