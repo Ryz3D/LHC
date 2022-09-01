@@ -32,7 +32,8 @@ enum err_compile
     COMPILE_UNDEF_FUNC,  // undefined function
     COMPILE_MISSING_ARG, // missing expected argument in function call
     COMPILE_MISSING_EXP, // missing expected expression
-    COMPILE_ILLEGAL_OP   // unknown operator
+    COMPILE_ILLEGAL_OP,  // unknown operator
+    COMPILE_OP_DEPTH     // too many concatenated operators, increase MAX_OP_LEVEL
 };
 
 enum err_assemble

@@ -5,7 +5,7 @@ I fully intend to build a machine capable of executing the generated binaries in
 
 ## Implemented
 
-_(very nearly pretty much)_
+_(actually)_
 
 - Parsing .c files
 - Basic variables (`uint_8`, `int_8`, `bool`)
@@ -28,14 +28,14 @@ _(very nearly pretty much)_
 ## TO-DO
 
 - Handle `else` by jumping past by default
-- Multiplication, division and modulo
+- Modulo
 - Multi-byte types
 - Native `print_uint` function for multiple digits
 - Native `print_int` function for negative sign
 
 ## Planned
 
-- At least other integer types (8-32bit + signed `int`s)
+- Other types, at least integers (8-32bit + signed `int`s)
 - Simple optimizations on assembly
   - Setting `RAM_P` multiple times before accessing RAM
   - No bus-reads -> nop

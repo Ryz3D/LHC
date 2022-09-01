@@ -49,7 +49,7 @@ int main()
                 goto outend;
             }
             putchar('#');
-        outend:
+        outend:;
         }
 
         putchar('\n');

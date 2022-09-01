@@ -65,6 +65,7 @@
             "command": "lhc",
             "args": [
                 "-s",
+                "50000",
                 "-ic",
                 "${relativeFile}"
             ],

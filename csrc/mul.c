@@ -6,17 +6,13 @@ int main()
     int b = 2;
 
     int c = 0;
-    int i = b - 1;
+    b--;
 
-div:
-    c += a;
-    i--;
-    if (i < 0)
+    while (b >= 0)
     {
-        goto end;
+        c += a;
+        b--;
     }
-    goto div;
-end:
     c += '0';
     putchar(c);
 

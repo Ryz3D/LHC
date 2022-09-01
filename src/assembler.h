@@ -24,6 +24,8 @@
 #include "instruction.h"
 #include "defines.h"
 
+#define MAX_OP_LEVEL 5
+
 class Variable
 {
 public:
@@ -45,7 +47,7 @@ private:
     static uint32_t label_counter;
 
     static Variable *find_var(std::string var_name, std::vector<Variable *> vars);
-    static err_compile evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, bool b = false);
+    static err_compile evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, uint8_t op_level = 0);
     static err_compile compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main);
     static void get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs);
 };

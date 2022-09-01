@@ -1,200 +1,94 @@
-13 -> RAM_P # 0
+5 -> RAM_P
+88 -> RAM # X
+32 -> RAM #  
+73 -> RAM # I
+83 -> RAM # S
+84 -> RAM # T
+32 -> RAM #  
+8 -> RAM_P # '0'
+48 -> RAM
+9 -> RAM_P # 2
+2 -> RAM
+10 -> RAM_P # 5
+5 -> RAM
+10 -> RAM_P
+RAM -> A
+255 -> B
+13 -> RAM_P
+ADD -> RAM
+9 -> RAM_P
+RAM -> A
+0 -> B
+10 -> RAM_P
+ADD -> RAM
+9 -> RAM_P
 0 -> RAM
-;while_loop0
+;*0loop
 	13 -> RAM_P
 	RAM -> A
-	0 -> B
-	8 -> RAM_P # x
+	3 -> RAM_P
+	:*0end -> RAM
+	4 -> RAM_P
+	:*0end -> RAM
+	10 -> RAM_P
+	RAM -> B
+	9 -> RAM_P
+	RAM -> A
 	ADD -> RAM
-	9 -> RAM_P # 9
-	9 -> RAM
+	13 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> RAM # *counter--
+	1 -> RAM_P
+	:*0loop -> RAM
+	2 -> RAM_P
+	:*0loop -> RAM
+;*0end
 	8 -> RAM_P
 	RAM -> B # RES1 -> B
 	9 -> RAM_P
 	RAM -> A # RES2 -> A
-	INV -> A
-	ADD -> A # delta (x <= 9)
-	0 -> B
-	255 -> B
-	ADD -> A # delta - 1
-	3 -> RAM_P
-	:<=1true -> RAM
-	4 -> RAM_P
-	:<=1true -> RAM
 	8 -> RAM_P
-	0 -> RAM # false
-	1 -> RAM_P
-	:<=1false -> RAM
-	2 -> RAM_P
-	:<=1false -> RAM
-;<=1true
-	8 -> RAM_P
-	1 -> RAM # true
-;<=1false
-	8 -> RAM_P
-	RAM -> A
-	255 -> B
-	ADD -> A
-	3 -> RAM_P
-	:while_end0 -> RAM
-	4 -> RAM_P
-	:while_end0 -> RAM
-	14 -> RAM_P # 2
+	ADD -> RAM # '0' + 2 * 5
+	9 -> RAM_P # 15
+	15 -> RAM
+	10 -> RAM_P # 2
 	2 -> RAM
-;while_loop2
-	14 -> RAM_P
-	RAM -> A
-	0 -> B
-	8 -> RAM_P # y
-	ADD -> RAM
-	9 -> RAM_P # 5
-	5 -> RAM
-	8 -> RAM_P
-	RAM -> B # RES1 -> B
 	9 -> RAM_P
-	RAM -> A # RES2 -> A
-	INV -> A
-	ADD -> A # delta (y <= 5)
-	0 -> B
-	255 -> B
-	ADD -> A # delta - 1
-	3 -> RAM_P
-	:<=3true -> RAM
-	4 -> RAM_P
-	:<=3true -> RAM
-	8 -> RAM_P
-	0 -> RAM # false
-	1 -> RAM_P
-	:<=3false -> RAM
-	2 -> RAM_P
-	:<=3false -> RAM
-;<=3true
-	8 -> RAM_P
-	1 -> RAM # true
-;<=3false
-	8 -> RAM_P
 	RAM -> A
-	255 -> B
-	ADD -> A
-	3 -> RAM_P
-	:while_end2 -> RAM
-	4 -> RAM_P
-	:while_end2 -> RAM
-	8 -> RAM_P # '0'
-	48 -> RAM
+	0 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	9 -> RAM_P
+	255 -> RAM
+;/0loop
 	13 -> RAM_P
 	RAM -> A
-	0 -> B
-	9 -> RAM_P # x
-	ADD -> RAM
-	8 -> RAM_P
-	RAM -> B # RES1 -> B
+	3 -> RAM_P
+	:/0end -> RAM
+	4 -> RAM_P
+	:/0end -> RAM
 	9 -> RAM_P
-	RAM -> A # RES2 -> A
-	5 -> RAM_P
-	ADD -> RAM # '0' + x
-	5 -> RAM_P # ' '
-	32 -> RAM
-	8 -> RAM_P # '0'
-	48 -> RAM
-	14 -> RAM_P
 	RAM -> A
-	0 -> B
-	9 -> RAM_P # y
-	ADD -> RAM
-	8 -> RAM_P
-	RAM -> B # RES1 -> B
-	9 -> RAM_P
-	RAM -> A # RES2 -> A
-	5 -> RAM_P
-	ADD -> RAM # '0' + y
-	5 -> RAM_P # ' '
-	32 -> RAM
-	13 -> RAM_P
+	1 -> B
+	ADD -> RAM # /counter++
+	10 -> RAM_P
 	RAM -> A
-	0 -> B
-	8 -> RAM_P # x
-	ADD -> RAM
-	9 -> RAM_P # 6
-	6 -> RAM
-	8 -> RAM_P
-	RAM -> B # RES1 -> B
-	9 -> RAM_P
-	RAM -> A # RES2 -> A
 	INV -> A
-	ADD -> A # delta (x == 6)
-	0 -> B
-	3 -> RAM_P
-	:==5false -> RAM
-	4 -> RAM_P
-	:==5false -> RAM
-	INV -> A # -delta
-	3 -> RAM_P
-	:==5false -> RAM
-	4 -> RAM_P
-	:==5false -> RAM
-	8 -> RAM_P
-	1 -> RAM
+	13 -> RAM_P
+	RAM -> B
+	ADD -> RAM
 	1 -> RAM_P
-	:==5true -> RAM
+	:/0loop -> RAM
 	2 -> RAM_P
-	:==5true -> RAM
-;==5false
+	:/0loop -> RAM
+;/0end
 	8 -> RAM_P
-	0 -> RAM
-;==5true
-	8 -> RAM_P
-	RAM -> A
-	255 -> B
-	ADD -> A
-	3 -> RAM_P
-	:if4 -> RAM
-	4 -> RAM_P
-	:if4 -> RAM
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A # -
 	5 -> RAM_P
-	88 -> RAM # X
-	32 -> RAM #  
-	73 -> RAM # I
-	83 -> RAM # S
-	84 -> RAM # T
-	32 -> RAM #  
-	54 -> RAM # 6
+	ADD -> RAM # '0' + 2 * 5 - 15 / 2
+	5 -> RAM_P
 	33 -> RAM # !
-	32 -> RAM #  
-;if4
-	14 -> RAM_P
-	RAM -> A
-	0 -> B
-	8 -> RAM_P # y
-	ADD -> RAM
-	9 -> RAM_P # 3
-	3 -> RAM
-	8 -> RAM_P
-	RAM -> B # RES1 -> B
-	9 -> RAM_P
-	RAM -> A # RES2 -> A
-	14 -> RAM_P
-	ADD -> RAM # y + 3
-	1 -> RAM_P
-	:while_loop2 -> RAM
-	2 -> RAM_P
-	:while_loop2 -> RAM
-;while_end2
-	13 -> RAM_P
-	RAM -> A
-	0 -> B
-	8 -> RAM_P # x
-	ADD -> RAM
-	9 -> RAM_P # 1
-	1 -> RAM
-	8 -> RAM_P
-	RAM -> B # RES1 -> B
-	9 -> RAM_P
-	RAM -> A # RES2 -> A
-	13 -> RAM_P
-	ADD -> RAM
-	1 -> RAM_P
-	:while_loop0 -> RAM
-	2 -> RAM_P
-	:while_loop0 -> RAM
-;while_end0

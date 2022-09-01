@@ -30,21 +30,14 @@ Variable *Assembler::find_var(std::string var_name, std::vector<Variable *> vars
     return nullptr;
 }
 
-err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, bool b)
+err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, uint8_t op_level)
 {
-    Variable *exp_res = Assembler::find_var("exp_res", vars);
-    Variable *exp_res_1;
-    Variable *exp_res_2;
-    if (b)
-    {
-        exp_res_1 = Assembler::find_var("exp_res_b1", vars);
-        exp_res_2 = Assembler::find_var("exp_res_b2", vars);
-    }
-    else
-    {
-        exp_res_1 = Assembler::find_var("exp_res_a1", vars);
-        exp_res_2 = Assembler::find_var("exp_res_a2", vars);
-    }
+    if (op_level >= MAX_OP_LEVEL)
+        return err_compile::COMPILE_OP_DEPTH;
+
+    Variable *exp_res_1 = Assembler::find_var("exp_res_" + std::to_string(op_level), vars);
+    Variable *exp_res_2 = Assembler::find_var("exp_res_" + std::to_string(op_level + 1), vars);
+    Variable *extra_counter = Assembler::find_var("extra_counter", vars);
 
     if (exp->content.size() > 0)
     {
@@ -90,18 +83,18 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             //  -> if b is variable, RAM -> B would be possible
             //  -> if b is operator, we have a problem
 
-            err_compile err = evaluate_exp(op->a, vars, buffer, exp_res->ram_location, true);
+            err_compile err = evaluate_exp(op->a, vars, buffer, exp_res_1->ram_location, op_level);
             if (err != err_compile::COMPILE_SUCCESS)
                 return err;
-            err = evaluate_exp(op->b, vars, buffer, exp_res_1->ram_location, true);
+            err = evaluate_exp(op->b, vars, buffer, exp_res_2->ram_location, op_level + 1);
             if (err != err_compile::COMPILE_SUCCESS)
                 return err;
 
             if (op->op == "+" || op->op == "-")
             {
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
-                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
                 buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
                 if (op->op == "-")
                     buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN, 0, "-")); // Invert A if neccessary
@@ -110,13 +103,99 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             }
             else if (op->op == "*")
             {
-                // TODO
-                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
+                std::string l_loop = op->op + std::to_string(label_counter) + "loop";
+                std::string l_end = op->op + std::to_string(label_counter) + "end";
+
+                // TODO: negative by xor
+
+                // buffer exp_res_2 - 1 into extra_counter
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_B_IN, 255));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, extra_counter->ram_location));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+                // buffer exp_res_1 into exp_res_2
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_B_IN, 0));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, 0));
+
+                buffer->push_back(new Instruction(l_loop));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, extra_counter->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, extra_counter->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_B_IN, 255));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN, 0, "*counter--"));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_loop));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_loop));
+
+                buffer->push_back(new Instruction(l_end));
             }
             else if (op->op == "/")
             {
-                // TODO
-                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
+                std::string l_loop = op->op + std::to_string(label_counter) + "loop";
+                std::string l_end = op->op + std::to_string(label_counter) + "end";
+
+                // TODO: negative by xor
+
+                // buffer exp_res_1 into extra_counter
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_B_IN, 0));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, extra_counter->ram_location));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, 255));
+
+                buffer->push_back(new Instruction(l_loop));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, extra_counter->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_B_IN, 1));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN, 0, "/counter++"));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, extra_counter->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_loop));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_loop));
+
+                buffer->push_back(new Instruction(l_end));
             }
             else if (op->op == "%")
             {
@@ -128,9 +207,9 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                 std::string l_true = op->op + std::to_string(label_counter) + "true";
                 std::string l_false = op->op + std::to_string(label_counter++) + "false";
 
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
-                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
                 buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
                 buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
                 buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN, 0, "delta (" + op->raw + ")"));
@@ -151,7 +230,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
 
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, op->op + "true"));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
@@ -159,7 +238,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 
                     buffer->push_back(new Instruction(l_false));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, op->op + "false"));
 
                     buffer->push_back(new Instruction(l_true));
                 }
@@ -179,7 +258,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
 
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, op->op + "false"));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
@@ -187,7 +266,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 
                     buffer->push_back(new Instruction(l_true));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, op->op + "true"));
 
                     buffer->push_back(new Instruction(l_false));
                 }
@@ -208,7 +287,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_true));
 
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, "false"));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, op->op + "false"));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
                     buffer->push_back(new Instruction(1 << INS_RAM_IN, l_false));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
@@ -216,7 +295,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 
                     buffer->push_back(new Instruction(l_true));
                     buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, "true"));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, op->op + "true"));
 
                     buffer->push_back(new Instruction(l_false));
                 }
@@ -225,9 +304,9 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             {
                 std::string label = op->op + std::to_string(label_counter++);
 
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res->ram_location));
-                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN, 0, "RES1 -> B"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
                 buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN, 0, "RES2 -> A"));
                 buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN, 0, "sum (" + op->raw + ")"));
                 buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
@@ -241,14 +320,14 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
                 buffer->push_back(new Instruction(1 << INS_B_IN, 0));
 
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, "true"));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, 1, op->op + "true"));
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
                 buffer->push_back(new Instruction(1 << INS_RAM_IN, label));
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
                 buffer->push_back(new Instruction(1 << INS_RAM_IN, label));
 
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
-                buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, "false"));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, 0, op->op + "false"));
 
                 buffer->push_back(new Instruction(label));
             }
@@ -268,11 +347,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 
 err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main)
 {
-    Variable *exp_res = Assembler::find_var("exp_res", vars);
-    Variable *exp_res_a1 = Assembler::find_var("exp_res_a1", vars);
-    Variable *exp_res_a2 = Assembler::find_var("exp_res_a2", vars);
-    Variable *exp_res_b1 = Assembler::find_var("exp_res_b1", vars);
-    Variable *exp_res_b2 = Assembler::find_var("exp_res_b2", vars);
+    Variable *exp_res = Assembler::find_var("exp_res_0", vars);
 
     for (size_t i = 0; i < tokens.size(); i++)
     {
@@ -440,11 +515,9 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
     FunctionToken *main = nullptr;
     std::vector<DefinitionToken *> var_defs = {};
 
-    var_defs.push_back(new DefinitionToken("exp_res"));
-    var_defs.push_back(new DefinitionToken("exp_res_a1"));
-    var_defs.push_back(new DefinitionToken("exp_res_a2"));
-    var_defs.push_back(new DefinitionToken("exp_res_b1"));
-    var_defs.push_back(new DefinitionToken("exp_res_b2"));
+    for (uint8_t i = 0; i < MAX_OP_LEVEL; i++)
+        var_defs.push_back(new DefinitionToken("exp_res_" + std::to_string(i)));
+    var_defs.push_back(new DefinitionToken("extra_counter"));
 
     Assembler::get_defs(tokens, &var_defs);
 
