@@ -19,9 +19,10 @@ _(actually)_
 - `while` by conditional and fixed jumps
 - `for` by transformation to `while`
 - Basic functions
-  - `putchar` writes to RAM 0x05
-  - `getchar` reads from RAM 0x05
+  - `putchar` writes to RAM 0x07
+  - `getchar` reads from RAM 0x07
   - `printf` for string literal only
+  - `print_int` for printing signed numbers
 - Custom CPU simulator (and brainfuck, just for fun)
 - Output, parse and execute custom assembly
   - Can be used as an assembly debugger/simulator and assembly->binary converter
@@ -29,10 +30,10 @@ _(actually)_
 
 ## TO-DO
 
+- Division/modulo by zero handler
 - Handle `else` by jumping past by default
 - Multi-byte types
-- Native `print_uint` function for multiple digits
-- Native `print_int` function for negative sign
+- Native `print_uint` function > 127
 
 ## Planned
 

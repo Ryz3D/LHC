@@ -12,6 +12,8 @@ int main()
         d = b + '0';
         putchar(d);
         putchar(' ');
+        putchar('/');
+        putchar(' ');
         c = a; // buffer a
         a = b; // shift b left
     }

@@ -17,8 +17,8 @@ ACUTE TODO:
 0x01/0x02 instruction pointer
 0x03/0x04 redirects to 0x01/0x02 if first bit of A (A < 0)
  ABOVE ARE APPLIED WHEN LOWER (LAST) BYTE IS SET
-0x05 putchar/getchar IO
-0x06/0x07 return address
+0x05/0x06 return address
+0x07 putchar/getchar IO
 
 NOR first few RAM_P bits for RAM_CE
 */
@@ -130,7 +130,13 @@ int main(int argc, char *argv[])
         Sim cpu = Sim();
         if (!nv)
             std::cout << "Simulation started" << std::endl;
-        cpu.execute(program, sim_steps, sim_debug);
+        err_sim err5 = cpu.execute(program, sim_steps, sim_debug);
+        if (err5 != err_sim::SIM_SUCCESS)
+        {
+            std::cout << "ERROR: Failed sim (" << err5 << ")" << std::endl;
+            return err5;
+        }
+
         if (!cpu.output_buffer.empty())
         {
             if (!nv)

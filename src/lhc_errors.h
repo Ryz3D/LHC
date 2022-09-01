@@ -34,7 +34,8 @@ enum err_compile
     COMPILE_MISSING_ARG, // missing expected argument in function call
     COMPILE_MISSING_EXP, // missing expected expression
     COMPILE_ILLEGAL_OP,  // unknown operator
-    COMPILE_OP_DEPTH     // too many concatenated operators, increase MAX_OP_LEVEL
+    COMPILE_OP_DEPTH,    // too many concatenated operators, increase MAX_OP_LEVEL
+    COMPILE_UNRESOLVED   // unresolved token, should be handled by Parser::resolve
 };
 
 enum err_assemble
@@ -43,4 +44,10 @@ enum err_assemble
     ASSEMBLE_UNDEF_LABEL,  // no label found for label literal
     ASSEMBLE_REDEF_LABEL,  // redefined label
     ASSEMBLE_BUS_COLLISION // multiple outputs to bus in one instruction
+};
+
+enum err_sim
+{
+    SIM_SUCCESS,
+    SIM_STEP_LIMIT // execution stopped at step limit
 };

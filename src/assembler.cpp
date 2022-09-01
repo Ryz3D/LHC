@@ -13,22 +13,6 @@ Variable::Variable(lhc_type var_type, std::string var_name, uint32_t ram_locatio
     this->ram_location = ram_location;
 }
 
-err_compile Assembler::get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs)
-{
-    for (size_t i = 0; i < tokens.size(); i++)
-    {
-        if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
-        {
-            for (size_t j = 0; j < var_defs->size(); j++)
-                if (var_defs->at(j)->var_name == dynamic_cast<DefinitionToken *>(tokens[i])->var_name)
-                    return err_compile::COMPILE_REDEF_VAR;
-            var_defs->push_back(dynamic_cast<DefinitionToken *>(tokens[i]));
-        }
-        Assembler::get_defs(tokens[i]->get_children(), var_defs);
-    }
-    return err_compile::COMPILE_SUCCESS;
-}
-
 Variable *Assembler::find_var(std::string var_name, std::vector<Variable *> vars)
 {
     for (size_t i = 0; i < vars.size(); i++)
@@ -395,6 +379,9 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 
 err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main)
 {
+    if (!Assembler::is_resolved(tokens))
+        return err_compile::COMPILE_UNRESOLVED;
+
     Variable *exp_res = Assembler::find_var("exp_res_0", vars);
     Variable *print_int_i = Assembler::find_var("print_int_i", vars);
 
@@ -429,7 +416,7 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             {
                 if (exp != nullptr)
                 {
-                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, 0x05);
+                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, 0x07);
                     if (err != err_compile::COMPILE_SUCCESS)
                         return err;
                 }
@@ -450,7 +437,7 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
                         str = dynamic_cast<LiteralString *>(exp->content[0]);
                     if (str == nullptr)
                         std::cout << "WARNING: printf only supports string literals" << std::endl;
-                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x05));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x07));
                     for (size_t j = 0; j < str->data.size(); j++)
                         buffer->push_back(new Instruction(1 << INS_RAM_IN, str->data[j], str->data.substr(j, 1)));
                 }
@@ -467,9 +454,9 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
                 if (err != err_compile::COMPILE_SUCCESS)
                     return err;
 
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x05));
                 buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x07));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
                 buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
 
                 buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
@@ -509,7 +496,9 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
             buffer->push_back(new Instruction(1 << INS_RAM_IN, l_if));
 
-            Assembler::compile_statements(statement->body, vars, buffer, false);
+            err_compile err = Assembler::compile_statements(statement->body, vars, buffer, false);
+            if (err != err_compile::COMPILE_SUCCESS)
+                return err;
 
             buffer->push_back(new Instruction(l_if));
         }
@@ -532,7 +521,9 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
             buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
 
-            Assembler::compile_statements(loop->body, vars, buffer, false);
+            err_compile err = Assembler::compile_statements(loop->body, vars, buffer, false);
+            if (err != err_compile::COMPILE_SUCCESS)
+                return err;
 
             buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
             buffer->push_back(new Instruction(1 << INS_RAM_IN, l_start));
@@ -551,8 +542,16 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
                 wloop->body.push_back(floop->append[j]);
 
             std::vector<Token *> tokens = {wloop};
-            Assembler::compile_statements(floop->prepend, vars, buffer, false);
-            Assembler::compile_statements(tokens, vars, buffer, false);
+            err_resolve err = Parser::resolve(tokens);
+            if (err != err_resolve::RESOLVE_SUCCESS)
+                std::cout << "WARNING: Resolve failed during for loop transformation" << std::endl;
+
+            err_compile err2 = Assembler::compile_statements(floop->prepend, vars, buffer, false);
+            if (err2 != err_compile::COMPILE_SUCCESS)
+                return err2;
+            err2 = Assembler::compile_statements(tokens, vars, buffer, false);
+            if (err2 != err_compile::COMPILE_SUCCESS)
+                return err2;
         }
         else if (dynamic_cast<ReturnToken *>(tokens[i]) != nullptr)
         {
@@ -570,8 +569,36 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
         return err_compile::COMPILE_SUCCESS;
 }
 
+err_compile Assembler::get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs)
+{
+    for (size_t i = 0; i < tokens.size(); i++)
+    {
+        if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
+        {
+            for (size_t j = 0; j < var_defs->size(); j++)
+                if (var_defs->at(j)->var_name == dynamic_cast<DefinitionToken *>(tokens[i])->var_name)
+                    return err_compile::COMPILE_REDEF_VAR;
+            var_defs->push_back(dynamic_cast<DefinitionToken *>(tokens[i]));
+        }
+        Assembler::get_defs(tokens[i]->get_children(), var_defs);
+    }
+    return err_compile::COMPILE_SUCCESS;
+}
+
+bool Assembler::is_resolved(std::vector<Token *> tokens)
+{
+    for (size_t i = 0; i < tokens.size(); i++)
+        if (!tokens[i]->resolved || !Assembler::is_resolved(tokens[i]->get_children()))
+            return false;
+
+    return true;
+}
+
 err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruction *> *buffer)
 {
+    if (!Assembler::is_resolved(tokens))
+        return err_compile::COMPILE_UNRESOLVED;
+
     buffer->clear();
     Assembler::label_counter = 0;
 
@@ -628,29 +655,45 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
 
     if (Assembler::def_print_int)
     {
-        buffer->push_back(new Instruction("print_int"));
         std::string src_print_int = " \
 print_int_a = print_int_i; \
-if (print_int_a < 0) { putchar('-'); print_int_a = 0 - print_int_i; } \
+if (print_int_a < 0) { \
+    putchar('-'); \
+    print_int_a = 0 - print_int_i; \
+} \
 print_int_c = 0; \
-for (print_int_b = print_int_a; print_int_b > 0; print_int_b /= 10) { print_int_c++; } \
-for (print_int_d = print_int_c - 1; print_int_d >= 0; print_int_d--) { print_int_f = print_int_a; for (print_int_e = 0; print_int_e < print_int_d; print_int_e++) { print_int_f /= 10; } putchar('0' + print_int_f % 10); }";
+for (print_int_b = print_int_a; print_int_b > 0; print_int_b /= 10) { \
+    print_int_c++; \
+} \
+for (print_int_d = print_int_c - 1; print_int_d >= 0; print_int_d--) { \
+    print_int_f = print_int_a; \
+    for (print_int_e = 0; print_int_e < print_int_d; print_int_e++) { \
+        print_int_f /= 10; \
+    } \
+    putchar('0' + print_int_f % 10); \
+} \
+";
 
         std::vector<Token *> tokens_print_int = {};
         err_parse err2 = Parser::parse(src_print_int, &tokens_print_int, parser_state::PARSE_STATEMENT);
         if (err2 != err_parse::PARSE_SUCCESS)
-            std::cout << "ERROR: Failed at print_int parse (" << err2 << ")" << std::endl;
+            std::cout << "WARNING: Failed at print_int parse (" << err2 << ")" << std::endl;
+        err_resolve err3 = Parser::resolve(tokens_print_int);
+        if (err3 != err_resolve::RESOLVE_SUCCESS)
+            std::cout << "WARNING: Failed at print_int resolve (" << err3 << ")" << std::endl;
+
+        buffer->push_back(new Instruction("print_int"));
         err = Assembler::compile_statements(tokens_print_int, vars, buffer, false);
         if (err != err_compile::COMPILE_SUCCESS)
-            return err;
+            std::cout << "WARNING: Failed at print_int compile (" << err << ")" << std::endl;
 
-        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
+        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x05));
         buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
         buffer->push_back(new Instruction(1 << INS_B_IN, 0));
         buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
         buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
 
-        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x07));
+        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
         buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
         buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
         buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));

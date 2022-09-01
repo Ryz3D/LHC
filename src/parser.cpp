@@ -350,13 +350,9 @@ err_resolve Parser::resolve(std::vector<Token *> tokens, bool debug)
             if (!tokens[i]->is_supported())
                 return err_resolve::RESOLVE_NOT_SUPPORTED;
 
-            std::vector<Token *> children = tokens[i]->get_children();
-            if (children.size() > 0)
-            {
-                err_resolve err = Parser::resolve(children);
-                if (err != err_resolve::RESOLVE_SUCCESS)
-                    return err;
-            }
+            err_resolve err = Parser::resolve(tokens[i]->get_children());
+            if (err != err_resolve::RESOLVE_SUCCESS)
+                return err;
         }
     }
 

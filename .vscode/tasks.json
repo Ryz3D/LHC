@@ -64,11 +64,47 @@
             "label": "run with LHC (.c)",
             "command": "lhc",
             "args": [
+                "-s",
+                "50000",
+                "-ic",
+                "${relativeFile}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "debug with LHC (.c)",
+            "command": "lhc",
+            "args": [
                 "-d",
                 "-s",
                 "50000",
                 "-ic",
                 "${relativeFile}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "group": "build"
+        },
+        {
+            "type": "shell",
+            "label": "build with LHC (.c)",
+            "command": "lhc",
+            "args": [
+                "-s",
+                "50000",
+                "-ic",
+                "${relativeFile}",
+                "-oa",
+                "ass/${fileBasenameNoExtension}.ass",
+                "-ob",
+                "bin/${fileBasenameNoExtension}.bin"
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

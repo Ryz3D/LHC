@@ -6,9 +6,10 @@ Sim::Sim()
         ram[i] = 0;
 }
 
-void Sim::execute(std::vector<Instruction *> program, size_t max_step, bool debug)
+err_sim Sim::execute(std::vector<Instruction *> program, size_t max_step, bool debug)
 {
-    for (size_t step = 0; step < max_step && ip < program.size(); step++)
+    size_t step;
+    for (step = 0; step < max_step && ip < program.size(); step++, ip++)
     {
         Instruction *ins = program[ip];
 
@@ -67,7 +68,7 @@ void Sim::execute(std::vector<Instruction *> program, size_t max_step, bool debu
                     if (A & 0b10000000)
                         ip = (uint16_t)ram[0x03] << 8 | bus;
                 }
-                else if (RAM_P == 0x05)
+                else if (RAM_P == 0x07)
                     output_buffer += (char)bus;
                 else
                     ram[RAM_P] = bus;
@@ -88,9 +89,11 @@ void Sim::execute(std::vector<Instruction *> program, size_t max_step, bool debu
         else if (debug)
             std::cout << ";" << ins->label << std::endl
                       << std::endl;
-
-        ip++;
     }
+
+    if (step >= max_step && ip < program.size())
+        return err_sim::SIM_STEP_LIMIT;
+    return err_sim::SIM_SUCCESS;
 }
 
 void Sim::debug_log(Instruction *ins)
