@@ -25,7 +25,7 @@ void Sim::execute(std::vector<Instruction *> program, size_t max_step, bool debu
                         if (program[i]->label == ins->label_literal)
                         {
                             uint16_t to = i - 1;
-                            if (RAM_P == 0x01 || RAM_P == 0x03)
+                            if (RAM_P % 2 == 1)
                                 bus = to >> 8;
                             else
                                 bus = to & 0xFF;
@@ -98,7 +98,7 @@ void Sim::debug_log(Instruction *ins)
     std::cout << ins->to_ass() << std::endl
               << "RAM: ";
 
-    for (size_t i = 10; i <= 20; i++)
+    for (size_t i = 8; i <= 20; i++)
         std::cout << "[" << (int)i << "]: " << (int)ram[i] << (i == 20 ? "\n" : "  /  ");
 
     std::cout << "A: " << (int)A

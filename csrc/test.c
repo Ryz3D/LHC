@@ -2,9 +2,10 @@
 
 int main()
 {
-    printf("X IST ");
-    putchar('0' + 2 * 5 - 15 / 5); // 7
-    printf("!");
+    int i = 13;
+
+    print_int(i);
+    putchar('!');
 
     return 0;
 }

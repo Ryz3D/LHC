@@ -1,5 +1,9 @@
 #include "assembler.h"
 
+bool Assembler::def_print_int = true;
+bool Assembler::def_mul = true;
+bool Assembler::def_div = true;
+bool Assembler::def_mod = true;
 uint32_t Assembler::label_counter = 0;
 
 Variable::Variable(lhc_type var_type, std::string var_name, uint32_t ram_location)
@@ -9,14 +13,20 @@ Variable::Variable(lhc_type var_type, std::string var_name, uint32_t ram_locatio
     this->ram_location = ram_location;
 }
 
-void Assembler::get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs)
+err_compile Assembler::get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs)
 {
     for (size_t i = 0; i < tokens.size(); i++)
     {
         if (dynamic_cast<DefinitionToken *>(tokens[i]) != nullptr)
+        {
+            for (size_t j = 0; j < var_defs->size(); j++)
+                if (var_defs->at(j)->var_name == dynamic_cast<DefinitionToken *>(tokens[i])->var_name)
+                    return err_compile::COMPILE_REDEF_VAR;
             var_defs->push_back(dynamic_cast<DefinitionToken *>(tokens[i]));
+        }
         Assembler::get_defs(tokens[i]->get_children(), var_defs);
     }
+    return err_compile::COMPILE_SUCCESS;
 }
 
 Variable *Assembler::find_var(std::string var_name, std::vector<Variable *> vars)
@@ -104,7 +114,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             else if (op->op == "*")
             {
                 std::string l_loop = op->op + std::to_string(label_counter) + "loop";
-                std::string l_end = op->op + std::to_string(label_counter) + "end";
+                std::string l_end = op->op + std::to_string(label_counter++) + "end";
 
                 // TODO: negative by xor
 
@@ -155,7 +165,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             else if (op->op == "/")
             {
                 std::string l_loop = op->op + std::to_string(label_counter) + "loop";
-                std::string l_end = op->op + std::to_string(label_counter) + "end";
+                std::string l_end = op->op + std::to_string(label_counter++) + "end";
 
                 // TODO: negative by xor
 
@@ -199,8 +209,46 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             }
             else if (op->op == "%")
             {
-                // TODO
-                std::cout << "WARNING: " << op->op << " ignored" << std::endl;
+                std::string l_loop = op->op + std::to_string(label_counter) + "loop";
+                std::string l_end = op->op + std::to_string(label_counter++) + "end";
+
+                if (exp_res_1->ram_location != into)
+                {
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_1->ram_location));
+                    buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                    buffer->push_back(new Instruction(1 << INS_B_IN, 0));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                    buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+                }
+
+                buffer->push_back(new Instruction(l_loop));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_ALU_INV | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_loop));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_loop));
+
+                buffer->push_back(new Instruction(l_end));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, exp_res_2->ram_location));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, into));
+                buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_B_IN));
+                buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
             }
             else if (op->op == "<" || op->op == ">" || op->op == "<=" || op->op == ">=" || op->op == "==")
             {
@@ -340,7 +388,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             std::cout << "Can't evaluate \"" << exp->content[0]->raw << "\" (yet)" << std::endl;
     }
 
-    // TODO: iterate with flags (i.e. B=0) to remove redundant instructions
+    // TODO: iterate with known values (i.e. A, B, RAM_P) to remove redundant instructions
 
     return err_compile::COMPILE_SUCCESS;
 }
@@ -348,6 +396,7 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
 err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main)
 {
     Variable *exp_res = Assembler::find_var("exp_res_0", vars);
+    Variable *print_int_i = Assembler::find_var("print_int_i", vars);
 
     for (size_t i = 0; i < tokens.size(); i++)
     {
@@ -413,8 +462,22 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             }
             else if (call->func_name == "print_int")
             {
-                // TODO
-                std::cout << "WARNING: " << call->func_name << " call ignored" << std::endl;
+                std::string l_return = "return" + std::to_string(label_counter);
+                err_compile err = Assembler::evaluate_exp(exp, vars, buffer, print_int_i->ram_location);
+                if (err != err_compile::COMPILE_SUCCESS)
+                    return err;
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x07));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
+
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, "print_int"));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, "print_int"));
+
+                buffer->push_back(new Instruction(l_return));
             }
             else
                 return err_compile::COMPILE_UNDEF_FUNC;
@@ -518,23 +581,32 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
     for (uint8_t i = 0; i < MAX_OP_LEVEL; i++)
         var_defs.push_back(new DefinitionToken("exp_res_" + std::to_string(i)));
     var_defs.push_back(new DefinitionToken("extra_counter"));
+    if (Assembler::def_print_int)
+    {
+        var_defs.push_back(new DefinitionToken("print_int_i"));
+        var_defs.push_back(new DefinitionToken("print_int_a"));
+        var_defs.push_back(new DefinitionToken("print_int_b"));
+        var_defs.push_back(new DefinitionToken("print_int_c"));
+        var_defs.push_back(new DefinitionToken("print_int_d"));
+        var_defs.push_back(new DefinitionToken("print_int_e"));
+        var_defs.push_back(new DefinitionToken("print_int_f"));
+    }
 
-    Assembler::get_defs(tokens, &var_defs);
+    err_compile err = Assembler::get_defs(tokens, &var_defs);
+    if (err != err_compile::COMPILE_SUCCESS)
+        return err;
 
     for (size_t i = 0; i < var_defs.size(); i++)
     {
-        var_defs[i]->var_type = lhc_type::INT8;
+        if (var_defs[i]->var_type == lhc_type::INVALID)
+            var_defs[i]->var_type = lhc_type::INT8;
         var_defs[i]->resolve();
     }
 
     for (size_t i = 0; i < tokens.size(); i++)
-    {
         if (dynamic_cast<FunctionToken *>(tokens[i]) != nullptr)
-        {
             if (dynamic_cast<FunctionToken *>(tokens[i])->func_name == "main")
                 main = dynamic_cast<FunctionToken *>(tokens[i]);
-        }
-    }
     if (main == nullptr)
         return err_compile::COMPILE_NO_MAIN;
 
@@ -549,25 +621,42 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
 
     // VARIABLES ALLOCATED
 
-    for (size_t i = 0; i < tokens.size(); i++)
+    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+    buffer->push_back(new Instruction(1 << INS_RAM_IN, "main"));
+    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+    buffer->push_back(new Instruction(1 << INS_RAM_IN, "main"));
+
+    if (Assembler::def_print_int)
     {
-        if (dynamic_cast<AssignmentToken *>(tokens[i]) != nullptr)
-        {
-            AssignmentToken *assignment = dynamic_cast<AssignmentToken *>(tokens[i]);
-            Variable *var = Assembler::find_var(assignment->var_name, vars);
-            if (var == nullptr)
-                return err_compile::COMPILE_UNDEF_VAR;
-            if (assignment->expression != nullptr)
-            {
-                err_compile err = Assembler::evaluate_exp(assignment->expression, vars, buffer, var->ram_location);
-                if (err != err_compile::COMPILE_SUCCESS)
-                    return err;
-            }
-            else
-                return err_compile::COMPILE_MISSING_EXP;
-        }
+        buffer->push_back(new Instruction("print_int"));
+        std::string src_print_int = " \
+print_int_a = print_int_i; \
+if (print_int_a < 0) { putchar('-'); print_int_a = 0 - print_int_i; } \
+print_int_c = 0; \
+for (print_int_b = print_int_a; print_int_b > 0; print_int_b /= 10) { print_int_c++; } \
+for (print_int_d = print_int_c - 1; print_int_d >= 0; print_int_d--) { print_int_f = print_int_a; for (print_int_e = 0; print_int_e < print_int_d; print_int_e++) { print_int_f /= 10; } putchar('0' + print_int_f % 10); }";
+
+        std::vector<Token *> tokens_print_int = {};
+        err_parse err2 = Parser::parse(src_print_int, &tokens_print_int, parser_state::PARSE_STATEMENT);
+        if (err2 != err_parse::PARSE_SUCCESS)
+            std::cout << "ERROR: Failed at print_int parse (" << err2 << ")" << std::endl;
+        err = Assembler::compile_statements(tokens_print_int, vars, buffer, false);
+        if (err != err_compile::COMPILE_SUCCESS)
+            return err;
+
+        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
+        buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+        buffer->push_back(new Instruction(1 << INS_B_IN, 0));
+        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+        buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
+
+        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x07));
+        buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+        buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+        buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_RAM_IN));
     }
 
+    buffer->push_back(new Instruction("main"));
     return Assembler::compile_statements(main->body, vars, buffer, true);
 
     // TODO: look at previous commits for optimization inspiration
@@ -586,6 +675,9 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
     {
         if (program[i]->label.size() > 0)
         {
+            for (size_t j = 0; j < labels.size(); j++)
+                if (program[i]->label == labels[j])
+                    return err_assemble::ASSEMBLE_REDEF_LABEL;
             labels.push_back(program[i]->label);
             label_positions.push_back(ip);
         }

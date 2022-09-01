@@ -21,14 +21,13 @@ _(actually)_
   - `getchar` reads from RAM 0x05
   - `printf` for string literal only
 - Custom CPU simulator (and brainfuck, just for fun)
-- Output and parse custom assembly
+- Output, parse and execute custom assembly
   - Can be used as an assembly debugger/simulator and assembly->binary converter
-- Output as binary (for EEPROM and LogiSim)
+- Output as binary (for flash memory and LogiSim)
 
 ## TO-DO
 
 - Handle `else` by jumping past by default
-- Modulo
 - Multi-byte types
 - Native `print_uint` function for multiple digits
 - Native `print_int` function for negative sign

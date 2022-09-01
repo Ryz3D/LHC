@@ -30,6 +30,7 @@ enum err_compile
     COMPILE_NO_EXIT,     // main function does not end with return
     COMPILE_UNDEF_VAR,   // undefined variable
     COMPILE_UNDEF_FUNC,  // undefined function
+    COMPILE_REDEF_VAR,   // redefined variable
     COMPILE_MISSING_ARG, // missing expected argument in function call
     COMPILE_MISSING_EXP, // missing expected expression
     COMPILE_ILLEGAL_OP,  // unknown operator
@@ -40,5 +41,6 @@ enum err_assemble
 {
     ASSEMBLE_SUCCESS,
     ASSEMBLE_UNDEF_LABEL,  // no label found for label literal
+    ASSEMBLE_REDEF_LABEL,  // redefined label
     ASSEMBLE_BUS_COLLISION // multiple outputs to bus in one instruction
 };

@@ -18,7 +18,7 @@ ACUTE TODO:
 0x03/0x04 redirects to 0x01/0x02 if first bit of A (A < 0)
  ABOVE ARE APPLIED WHEN LOWER (LAST) BYTE IS SET
 0x05 putchar/getchar IO
-0x06/0x07 reserved
+0x06/0x07 return address
 
 NOR first few RAM_P bits for RAM_CE
 */

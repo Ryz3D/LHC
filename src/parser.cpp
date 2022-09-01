@@ -267,7 +267,7 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                                     i++;
 
                                 if (CHAR_IS_OP(op))
-                                    exp_str = token_buffer + op + exp_str;
+                                    exp_str = token_buffer + " " + op + " " + exp_str;
 
                                 AssignmentToken *assignment = new AssignmentToken();
                                 assignment->var_name = token_buffer;
@@ -638,7 +638,22 @@ err_parse Parser::parse_expression_part(std::string str, std::vector<Token *> *b
     if (new_token)
     {
         if (buffer->size() != exp_operators->size() + 1)
-            return err_parse::PARSE_UNEXPECTED_TOKEN;
+        {
+            // edge case of negative int literal without space
+            bool handled = false;
+            LiteralInt *lit_int = dynamic_cast<LiteralInt *>(buffer->back());
+            if (lit_int != nullptr)
+            {
+                if (lit_int->raw[0] == '-')
+                {
+                    lit_int->raw = lit_int->raw.substr(1);
+                    exp_operators->push_back("-");
+                    handled = true;
+                }
+            }
+            if (!handled)
+                return err_parse::PARSE_UNEXPECTED_TOKEN;
+        }
     }
     else if (new_op)
     {

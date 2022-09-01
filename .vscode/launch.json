@@ -12,6 +12,7 @@
             "program": "${workspaceFolder}\\lhc_debug.exe",
             "args": [
                 "-s",
+                "100000",
                 "-ic",
                 "csrc/test.c",
                 "-oa",

@@ -23,6 +23,7 @@
 
 #include "instruction.h"
 #include "defines.h"
+#include "parser.h"
 
 #define MAX_OP_LEVEL 5
 
@@ -45,9 +46,13 @@ public:
 
 private:
     static uint32_t label_counter;
+    static bool def_print_int;
+    static bool def_mul;
+    static bool def_div;
+    static bool def_mod;
 
     static Variable *find_var(std::string var_name, std::vector<Variable *> vars);
     static err_compile evaluate_exp(ExpressionToken *exp, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, uint32_t into, uint8_t op_level = 0);
     static err_compile compile_statements(std::vector<Token *> tokens, std::vector<Variable *> vars, std::vector<Instruction *> *buffer, bool main);
-    static void get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs);
+    static err_compile get_defs(std::vector<Token *> tokens, std::vector<DefinitionToken *> *var_defs);
 };

@@ -1,94 +1,402 @@
-5 -> RAM_P
-88 -> RAM # X
-32 -> RAM #  
-73 -> RAM # I
-83 -> RAM # S
-84 -> RAM # T
-32 -> RAM #  
-8 -> RAM_P # '0'
-48 -> RAM
-9 -> RAM_P # 2
-2 -> RAM
-10 -> RAM_P # 5
-5 -> RAM
-10 -> RAM_P
-RAM -> A
-255 -> B
-13 -> RAM_P
-ADD -> RAM
-9 -> RAM_P
-RAM -> A
-0 -> B
-10 -> RAM_P
-ADD -> RAM
-9 -> RAM_P
-0 -> RAM
-;*0loop
-	13 -> RAM_P
+1 -> RAM_P
+:main -> RAM
+2 -> RAM_P
+:main -> RAM
+;print_int
+	14 -> RAM_P
 	RAM -> A
-	3 -> RAM_P
-	:*0end -> RAM
-	4 -> RAM_P
-	:*0end -> RAM
-	10 -> RAM_P
-	RAM -> B
-	9 -> RAM_P
-	RAM -> A
+	0 -> B
+	15 -> RAM_P # print_int_i
 	ADD -> RAM
-	13 -> RAM_P
+	15 -> RAM_P
 	RAM -> A
-	255 -> B
-	ADD -> RAM # *counter--
-	1 -> RAM_P
-	:*0loop -> RAM
-	2 -> RAM_P
-	:*0loop -> RAM
-;*0end
+	0 -> B
+	8 -> RAM_P # print_int_a
+	ADD -> RAM
+	9 -> RAM_P # 0
+	0 -> RAM
 	8 -> RAM_P
 	RAM -> B # RES1 -> B
 	9 -> RAM_P
 	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (print_int_a < 0)
+	0 -> B
+	3 -> RAM_P
+	:<1true -> RAM
+	4 -> RAM_P
+	:<1true -> RAM
 	8 -> RAM_P
-	ADD -> RAM # '0' + 2 * 5
-	9 -> RAM_P # 15
-	15 -> RAM
-	10 -> RAM_P # 2
-	2 -> RAM
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<1false -> RAM
+	2 -> RAM_P
+	:<1false -> RAM
+;<1true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<1false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:if0 -> RAM
+	4 -> RAM_P
+	:if0 -> RAM
+	5 -> RAM_P # '-'
+	0 -> RAM
+	8 -> RAM_P # 0
+	0 -> RAM
+	14 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # print_int_i
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
 	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A # -
+	15 -> RAM_P
+	ADD -> RAM # 0 - print_int_i
+;if0
+	17 -> RAM_P # 0
+	0 -> RAM
+	15 -> RAM_P
+	RAM -> A
+	0 -> B
+	16 -> RAM_P # print_int_a
+	ADD -> RAM
+;while_loop2
+	16 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_b
+	ADD -> RAM
+	9 -> RAM_P # 0
+	0 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (print_int_b > 0)
+	0 -> B
+	INV -> A # -delta
+	3 -> RAM_P
+	:>3true -> RAM
+	4 -> RAM_P
+	:>3true -> RAM
+	8 -> RAM_P
+	0 -> RAM # >false
+	1 -> RAM_P
+	:>3false -> RAM
+	2 -> RAM_P
+	:>3false -> RAM
+;>3true
+	8 -> RAM_P
+	1 -> RAM # >true
+;>3false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:while_end2 -> RAM
+	4 -> RAM_P
+	:while_end2 -> RAM
+	17 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_c
+	ADD -> RAM
+	9 -> RAM_P # 1
+	0 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	17 -> RAM_P
+	ADD -> RAM
+	16 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_b
+	ADD -> RAM
+	9 -> RAM_P # 10
+	0 -> RAM
+	8 -> RAM_P
 	RAM -> A
 	0 -> B
 	13 -> RAM_P
 	ADD -> RAM
-	9 -> RAM_P
+	16 -> RAM_P
 	255 -> RAM
-;/0loop
+;/4loop
 	13 -> RAM_P
 	RAM -> A
 	3 -> RAM_P
-	:/0end -> RAM
+	:/4end -> RAM
 	4 -> RAM_P
-	:/0end -> RAM
-	9 -> RAM_P
+	:/4end -> RAM
+	16 -> RAM_P
 	RAM -> A
 	1 -> B
 	ADD -> RAM # /counter++
-	10 -> RAM_P
+	9 -> RAM_P
 	RAM -> A
 	INV -> A
 	13 -> RAM_P
 	RAM -> B
 	ADD -> RAM
 	1 -> RAM_P
-	:/0loop -> RAM
+	:/4loop -> RAM
 	2 -> RAM_P
-	:/0loop -> RAM
-;/0end
+	:/4loop -> RAM
+;/4end
+	1 -> RAM_P
+	:while_loop2 -> RAM
+	2 -> RAM_P
+	:while_loop2 -> RAM
+;while_end2
+	17 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_c
+	ADD -> RAM
+	9 -> RAM_P # 1
+	0 -> RAM
 	8 -> RAM_P
 	RAM -> B # RES1 -> B
 	9 -> RAM_P
 	RAM -> A # RES2 -> A
 	INV -> A # -
+	18 -> RAM_P
+	ADD -> RAM # print_int_c - 1
+;while_loop5
+	18 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_d
+	ADD -> RAM
+	9 -> RAM_P # 0
+	0 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (print_int_d >= 0)
+	0 -> B
+	INV -> A # -delta
+	255 -> B
+	ADD -> A # delta - 1
+	3 -> RAM_P
+	:>=6true -> RAM
+	4 -> RAM_P
+	:>=6true -> RAM
+	8 -> RAM_P
+	0 -> RAM # >=false
+	1 -> RAM_P
+	:>=6false -> RAM
+	2 -> RAM_P
+	:>=6false -> RAM
+;>=6true
+	8 -> RAM_P
+	1 -> RAM # >=true
+;>=6false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:while_end5 -> RAM
+	4 -> RAM_P
+	:while_end5 -> RAM
+	15 -> RAM_P
+	RAM -> A
+	0 -> B
+	20 -> RAM_P # print_int_a
+	ADD -> RAM
+	19 -> RAM_P # 0
+	0 -> RAM
+;while_loop7
+	19 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_e
+	ADD -> RAM
+	18 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # print_int_d
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (print_int_e < print_int_d)
+	0 -> B
+	3 -> RAM_P
+	:<8true -> RAM
+	4 -> RAM_P
+	:<8true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<8false -> RAM
+	2 -> RAM_P
+	:<8false -> RAM
+;<8true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<8false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:while_end7 -> RAM
+	4 -> RAM_P
+	:while_end7 -> RAM
+	20 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_f
+	ADD -> RAM
+	9 -> RAM_P # 10
+	0 -> RAM
+	8 -> RAM_P
+	RAM -> A
+	0 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	20 -> RAM_P
+	255 -> RAM
+;/9loop
+	13 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:/9end -> RAM
+	4 -> RAM_P
+	:/9end -> RAM
+	20 -> RAM_P
+	RAM -> A
+	1 -> B
+	ADD -> RAM # /counter++
+	9 -> RAM_P
+	RAM -> A
+	INV -> A
+	13 -> RAM_P
+	RAM -> B
+	ADD -> RAM
+	1 -> RAM_P
+	:/9loop -> RAM
+	2 -> RAM_P
+	:/9loop -> RAM
+;/9end
+	19 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_e
+	ADD -> RAM
+	9 -> RAM_P # 1
+	0 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	19 -> RAM_P
+	ADD -> RAM
+	1 -> RAM_P
+	:while_loop7 -> RAM
+	2 -> RAM_P
+	:while_loop7 -> RAM
+;while_end7
+	8 -> RAM_P # '0'
+	0 -> RAM
+	20 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # print_int_f
+	ADD -> RAM
+	10 -> RAM_P # 10
+	0 -> RAM
+;%10loop
+	9 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:%10end -> RAM
+	4 -> RAM_P
+	:%10end -> RAM
+	10 -> RAM_P
+	RAM -> A
+	INV -> A
+	9 -> RAM_P
+	RAM -> B
+	ADD -> RAM
+	1 -> RAM_P
+	:%10loop -> RAM
+	2 -> RAM_P
+	:%10loop -> RAM
+;%10end
+	10 -> RAM_P
+	RAM -> A
+	9 -> RAM_P
+	RAM -> B
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
 	5 -> RAM_P
-	ADD -> RAM # '0' + 2 * 5 - 15 / 2
-	5 -> RAM_P
-	33 -> RAM # !
+	ADD -> RAM # '0' + print_int_f % 10
+	18 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # print_int_d
+	ADD -> RAM
+	9 -> RAM_P # 1
+	0 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A # -
+	18 -> RAM_P
+	ADD -> RAM
+	1 -> RAM_P
+	:while_loop5 -> RAM
+	2 -> RAM_P
+	:while_loop5 -> RAM
+;while_end5
+	6 -> RAM_P
+	RAM -> A
+	0 -> B
+	1 -> RAM_P
+	ADD -> RAM
+	7 -> RAM_P
+	RAM -> A
+	2 -> RAM_P
+	ADD -> RAM
+;main
+	21 -> RAM_P # 13
+	13 -> RAM
+	21 -> RAM_P
+	RAM -> A
+	0 -> B
+	14 -> RAM_P # i
+	ADD -> RAM
+	6 -> RAM_P
+	:return11 -> RAM
+	7 -> RAM_P
+	:return11 -> RAM
+	1 -> RAM_P
+	:print_int -> RAM
+	2 -> RAM_P
+	:print_int -> RAM
+;return11
+	5 -> RAM_P # '!'
+	33 -> RAM
