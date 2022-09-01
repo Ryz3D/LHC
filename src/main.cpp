@@ -114,6 +114,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    if (!in_ass.empty())
+    {
+        std::cout << Assembler::to_ass(program);
+    }
+
     std::vector<uint8_t> binary = {};
     err_assemble err4 = Assembler::assemble(program, &binary);
     if (err4 != err_assemble::ASSEMBLE_SUCCESS)
@@ -121,8 +126,6 @@ int main(int argc, char *argv[])
         std::cout << "ERROR: Failed assemble (" << err4 << ")" << std::endl;
         return err4;
     }
-    std::cout << "Unoptimized ROM: " << binary.size() / 2 << " B" << std::endl;
-    binary = Assembler::optimize(binary);
 
     if (out_ass.size() > 0)
         FS::write_file(out_ass, Assembler::to_ass(program));

@@ -26,13 +26,35 @@ Instruction *Instruction::parse_ass(std::string str)
     bool has_literal = false;
     std::string cw_buffer = "";
 
-    if (str[0] == ';' && str.size() > 1)
+    size_t i;
+    for (i = 0; i < str.size(); i++)
+        if (!CHAR_IS_EMPTY(str[i]))
+            break;
+
+    if (str.size() > 1)
     {
-        ins->label = str.substr(1);
-        return ins;
+        if (str[i] == ';')
+        {
+            ins->label = str.substr(i + 1);
+            return ins;
+        }
+        else if (str[i] == ':')
+        {
+            size_t start = i + 1;
+            for (; i < str.size(); i++)
+                if (CHAR_IS_EMPTY(str[i]) || str.substr(i, 2) == "->")
+                    break;
+            ins->label_literal = str.substr(start, i - start);
+            for (; i < str.size(); i++)
+                if (str[i] == '>')
+                    break;
+            i++;
+            has_literal = true;
+            out = false;
+        }
     }
 
-    for (size_t i = 0; i < str.size(); i++)
+    for (; i < str.size(); i++)
     {
         if (out && i < str.size() - 1)
         {

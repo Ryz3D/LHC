@@ -790,62 +790,6 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
     return err_assemble::ASSEMBLE_SUCCESS;
 }
 
-std::vector<uint8_t> Assembler::optimize(std::vector<uint8_t> binary)
-{
-    std::vector<uint8_t> processed = {};
-
-    // don't do this because of jumps
-    // maybe detect jump points, then set known to false
-
-    /*
-        bool a_known = false, b_known = false, ram_p_known = false;
-        uint8_t a_val = 0, b_val = 0, ram_p_val = 0;
-        for (size_t i = 0; i < binary.size(); i += 2)
-        {
-            bool need_ins = true;
-            bool lit = binary[i] >> 4 == 0;
-
-            if ((binary[i] & 0b1111 == 1 << INS_A_IN) && lit)
-            {
-                if (a_known && binary[i + 1] == a_val)
-                    need_ins = false;
-                a_known = true;
-                a_val = binary[i + 1];
-            }
-            else if (binary[i] & 1 << INS_A_IN)
-                a_known = false;
-
-            if ((binary[i] & 0b1111 == 1 << INS_B_IN) && lit)
-            {
-                if (b_known && binary[i + 1] == b_val)
-                    need_ins = false;
-                b_known = true;
-                b_val = binary[i + 1];
-            }
-            else if (binary[i] & 1 << INS_B_IN)
-                b_known = false;
-
-            if ((binary[i] & 0b1111 == 1 << INS_RAM_P_IN) && lit)
-            {
-                if (ram_p_known && binary[i + 1] == ram_p_val)
-                    need_ins = false;
-                ram_p_known = true;
-                ram_p_val = binary[i + 1];
-            }
-            else if (binary[i] & 1 << INS_RAM_P_IN)
-                ram_p_known = false;
-
-            if (need_ins)
-            {
-                processed.push_back(binary[i]);
-                processed.push_back(binary[i + 1]);
-            }
-        }
-    */
-
-    return processed;
-}
-
 std::vector<Instruction *> Assembler::parse_ass(std::string str)
 {
     std::vector<Instruction *> program = {};

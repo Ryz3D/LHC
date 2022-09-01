@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 
+#include "defines.h"
+
 #define INS_RAM_IN 0
 #define INS_RAM_P_IN 1
 #define INS_A_IN 2
