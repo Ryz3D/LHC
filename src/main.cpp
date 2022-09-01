@@ -9,7 +9,9 @@
 #include "sim.h"
 
 /*
-ACUTE TODO:
+TODO:
+ - FIX FROM_ASS
+ - binary input for sim
  - signed comparisons
  - return value from calltoken
 
@@ -119,6 +121,8 @@ int main(int argc, char *argv[])
         std::cout << "ERROR: Failed assemble (" << err4 << ")" << std::endl;
         return err4;
     }
+    std::cout << "Unoptimized ROM: " << binary.size() / 2 << " B" << std::endl;
+    binary = Assembler::optimize(binary);
 
     if (out_ass.size() > 0)
         FS::write_file(out_ass, Assembler::to_ass(program));

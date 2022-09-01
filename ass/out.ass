@@ -382,19 +382,713 @@
 	2 -> RAM_P
 	ADD -> RAM
 ;main
-	21 -> RAM_P # 15
-	15 -> RAM
+	21 -> RAM_P # -200
+	56 -> RAM
+;while_loop11
 	21 -> RAM_P
 	RAM -> A
 	0 -> B
-	14 -> RAM_P # g
+	8 -> RAM_P # y
 	ADD -> RAM
-	5 -> RAM_P
-	:return11 -> RAM
-	6 -> RAM_P
-	:return11 -> RAM
+	9 -> RAM_P # 200
+	200 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (y < 200)
+	0 -> B
+	3 -> RAM_P
+	:<12true -> RAM
+	4 -> RAM_P
+	:<12true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
 	1 -> RAM_P
-	:print_int -> RAM
+	:<12false -> RAM
 	2 -> RAM_P
-	:print_int -> RAM
-;return11
+	:<12false -> RAM
+;<12true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<12false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:while_end11 -> RAM
+	4 -> RAM_P
+	:while_end11 -> RAM
+	22 -> RAM_P # -150
+	106 -> RAM
+;while_loop13
+	22 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # x
+	ADD -> RAM
+	9 -> RAM_P # 50
+	50 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (x < 50)
+	0 -> B
+	3 -> RAM_P
+	:<14true -> RAM
+	4 -> RAM_P
+	:<14true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<14false -> RAM
+	2 -> RAM_P
+	:<14false -> RAM
+;<14true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<14false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:while_end13 -> RAM
+	4 -> RAM_P
+	:while_end13 -> RAM
+	24 -> RAM_P # 0
+	0 -> RAM
+	25 -> RAM_P # 0
+	0 -> RAM
+	23 -> RAM_P # 0
+	0 -> RAM
+;while_loop15
+	23 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # iter
+	ADD -> RAM
+	9 -> RAM_P # 250
+	250 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (iter < 250)
+	0 -> B
+	3 -> RAM_P
+	:<16true -> RAM
+	4 -> RAM_P
+	:<16true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<16false -> RAM
+	2 -> RAM_P
+	:<16false -> RAM
+;<16true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<16false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:while_end15 -> RAM
+	4 -> RAM_P
+	:while_end15 -> RAM
+	24 -> RAM_P
+	RAM -> A
+	0 -> B
+	26 -> RAM_P # z1
+	ADD -> RAM
+	24 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # z1
+	ADD -> RAM
+	24 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # z1
+	ADD -> RAM
+	9 -> RAM_P
+	RAM -> A
+	255 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P
+	ADD -> RAM
+	8 -> RAM_P
+	0 -> RAM
+;*17loop
+	13 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:*17end -> RAM
+	4 -> RAM_P
+	:*17end -> RAM
+	9 -> RAM_P
+	RAM -> B
+	8 -> RAM_P
+	RAM -> A
+	ADD -> RAM
+	13 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> RAM # *counter--
+	1 -> RAM_P
+	:*17loop -> RAM
+	2 -> RAM_P
+	:*17loop -> RAM
+;*17end
+	25 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # z2
+	ADD -> RAM
+	25 -> RAM_P
+	RAM -> A
+	0 -> B
+	10 -> RAM_P # z2
+	ADD -> RAM
+	10 -> RAM_P
+	RAM -> A
+	255 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	9 -> RAM_P
+	RAM -> A
+	0 -> B
+	10 -> RAM_P
+	ADD -> RAM
+	9 -> RAM_P
+	0 -> RAM
+;*18loop
+	13 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:*18end -> RAM
+	4 -> RAM_P
+	:*18end -> RAM
+	10 -> RAM_P
+	RAM -> B
+	9 -> RAM_P
+	RAM -> A
+	ADD -> RAM
+	13 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> RAM # *counter--
+	1 -> RAM_P
+	:*18loop -> RAM
+	2 -> RAM_P
+	:*18loop -> RAM
+;*18end
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A # -
+	24 -> RAM_P
+	ADD -> RAM # z1 * z1 - z2 * z2
+	8 -> RAM_P # 2
+	2 -> RAM
+	26 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # z3
+	ADD -> RAM
+	9 -> RAM_P
+	RAM -> A
+	255 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P
+	ADD -> RAM
+	8 -> RAM_P
+	0 -> RAM
+;*19loop
+	13 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:*19end -> RAM
+	4 -> RAM_P
+	:*19end -> RAM
+	9 -> RAM_P
+	RAM -> B
+	8 -> RAM_P
+	RAM -> A
+	ADD -> RAM
+	13 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> RAM # *counter--
+	1 -> RAM_P
+	:*19loop -> RAM
+	2 -> RAM_P
+	:*19loop -> RAM
+;*19end
+	25 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # z2
+	ADD -> RAM
+	9 -> RAM_P
+	RAM -> A
+	255 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P
+	ADD -> RAM
+	25 -> RAM_P
+	0 -> RAM
+;*20loop
+	13 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:*20end -> RAM
+	4 -> RAM_P
+	:*20end -> RAM
+	9 -> RAM_P
+	RAM -> B
+	25 -> RAM_P
+	RAM -> A
+	ADD -> RAM
+	13 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> RAM # *counter--
+	1 -> RAM_P
+	:*20loop -> RAM
+	2 -> RAM_P
+	:*20loop -> RAM
+;*20end
+	24 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # z1
+	ADD -> RAM
+	9 -> RAM_P # 100
+	100 -> RAM
+	8 -> RAM_P
+	RAM -> A
+	0 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	8 -> RAM_P
+	255 -> RAM
+;/21loop
+	13 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:/21end -> RAM
+	4 -> RAM_P
+	:/21end -> RAM
+	8 -> RAM_P
+	RAM -> A
+	1 -> B
+	ADD -> RAM # /counter++
+	9 -> RAM_P
+	RAM -> A
+	INV -> A
+	13 -> RAM_P
+	RAM -> B
+	ADD -> RAM
+	1 -> RAM_P
+	:/21loop -> RAM
+	2 -> RAM_P
+	:/21loop -> RAM
+;/21end
+	22 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # x
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	24 -> RAM_P
+	ADD -> RAM # z1 / 100 + x
+	25 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # z2
+	ADD -> RAM
+	9 -> RAM_P # 100
+	100 -> RAM
+	8 -> RAM_P
+	RAM -> A
+	0 -> B
+	13 -> RAM_P
+	ADD -> RAM
+	8 -> RAM_P
+	255 -> RAM
+;/22loop
+	13 -> RAM_P
+	RAM -> A
+	3 -> RAM_P
+	:/22end -> RAM
+	4 -> RAM_P
+	:/22end -> RAM
+	8 -> RAM_P
+	RAM -> A
+	1 -> B
+	ADD -> RAM # /counter++
+	9 -> RAM_P
+	RAM -> A
+	INV -> A
+	13 -> RAM_P
+	RAM -> B
+	ADD -> RAM
+	1 -> RAM_P
+	:/22loop -> RAM
+	2 -> RAM_P
+	:/22loop -> RAM
+;/22end
+	21 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # y
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	25 -> RAM_P
+	ADD -> RAM # z2 / 100 + y
+	24 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # z1
+	ADD -> RAM
+	9 -> RAM_P # 200
+	200 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (z1 > 200)
+	0 -> B
+	INV -> A # -delta
+	3 -> RAM_P
+	:>24true -> RAM
+	4 -> RAM_P
+	:>24true -> RAM
+	8 -> RAM_P
+	0 -> RAM # >false
+	1 -> RAM_P
+	:>24false -> RAM
+	2 -> RAM_P
+	:>24false -> RAM
+;>24true
+	8 -> RAM_P
+	1 -> RAM # >true
+;>24false
+	25 -> RAM_P
+	RAM -> A
+	0 -> B
+	9 -> RAM_P # z2
+	ADD -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	ADD -> A # sum (z1 > 200 || z2)
+	INV -> A
+	0 -> B
+	8 -> RAM_P
+	1 -> RAM # ||true
+	3 -> RAM_P
+	:||25 -> RAM
+	4 -> RAM_P
+	:||25 -> RAM
+	8 -> RAM_P
+	0 -> RAM # ||false
+;||25
+	9 -> RAM_P # 200
+	200 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (z1 > 200 || z2 > 200)
+	0 -> B
+	INV -> A # -delta
+	3 -> RAM_P
+	:>26true -> RAM
+	4 -> RAM_P
+	:>26true -> RAM
+	8 -> RAM_P
+	0 -> RAM # >false
+	1 -> RAM_P
+	:>26false -> RAM
+	2 -> RAM_P
+	:>26false -> RAM
+;>26true
+	8 -> RAM_P
+	1 -> RAM # >true
+;>26false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:if23 -> RAM
+	4 -> RAM_P
+	:if23 -> RAM
+	1 -> RAM_P
+	:iterbreak -> RAM
+	2 -> RAM_P
+	:iterbreak -> RAM
+;if23
+	23 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # iter
+	ADD -> RAM
+	9 -> RAM_P # 1
+	1 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	23 -> RAM_P
+	ADD -> RAM
+	1 -> RAM_P
+	:while_loop15 -> RAM
+	2 -> RAM_P
+	:while_loop15 -> RAM
+;while_end15
+;iterbreak
+	23 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # iter
+	ADD -> RAM
+	9 -> RAM_P # 4
+	4 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (iter < 4)
+	0 -> B
+	3 -> RAM_P
+	:<28true -> RAM
+	4 -> RAM_P
+	:<28true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<28false -> RAM
+	2 -> RAM_P
+	:<28false -> RAM
+;<28true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<28false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:if27 -> RAM
+	4 -> RAM_P
+	:if27 -> RAM
+	7 -> RAM_P # ' '
+	32 -> RAM
+	1 -> RAM_P
+	:outend -> RAM
+	2 -> RAM_P
+	:outend -> RAM
+;if27
+	23 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # iter
+	ADD -> RAM
+	9 -> RAM_P # 6
+	6 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (iter < 6)
+	0 -> B
+	3 -> RAM_P
+	:<30true -> RAM
+	4 -> RAM_P
+	:<30true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<30false -> RAM
+	2 -> RAM_P
+	:<30false -> RAM
+;<30true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<30false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:if29 -> RAM
+	4 -> RAM_P
+	:if29 -> RAM
+	7 -> RAM_P # '.'
+	46 -> RAM
+	1 -> RAM_P
+	:outend -> RAM
+	2 -> RAM_P
+	:outend -> RAM
+;if29
+	23 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # iter
+	ADD -> RAM
+	9 -> RAM_P # 10
+	10 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (iter < 10)
+	0 -> B
+	3 -> RAM_P
+	:<32true -> RAM
+	4 -> RAM_P
+	:<32true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<32false -> RAM
+	2 -> RAM_P
+	:<32false -> RAM
+;<32true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<32false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:if31 -> RAM
+	4 -> RAM_P
+	:if31 -> RAM
+	7 -> RAM_P # '-'
+	45 -> RAM
+	1 -> RAM_P
+	:outend -> RAM
+	2 -> RAM_P
+	:outend -> RAM
+;if31
+	23 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # iter
+	ADD -> RAM
+	9 -> RAM_P # 250
+	250 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	INV -> A
+	ADD -> A # delta (iter < 250)
+	0 -> B
+	3 -> RAM_P
+	:<34true -> RAM
+	4 -> RAM_P
+	:<34true -> RAM
+	8 -> RAM_P
+	0 -> RAM # <false
+	1 -> RAM_P
+	:<34false -> RAM
+	2 -> RAM_P
+	:<34false -> RAM
+;<34true
+	8 -> RAM_P
+	1 -> RAM # <true
+;<34false
+	8 -> RAM_P
+	RAM -> A
+	255 -> B
+	ADD -> A
+	3 -> RAM_P
+	:if33 -> RAM
+	4 -> RAM_P
+	:if33 -> RAM
+	7 -> RAM_P # '*'
+	42 -> RAM
+	1 -> RAM_P
+	:outend -> RAM
+	2 -> RAM_P
+	:outend -> RAM
+;if33
+	7 -> RAM_P # '#'
+	35 -> RAM
+;outend
+	22 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # x
+	ADD -> RAM
+	9 -> RAM_P # 2
+	2 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	22 -> RAM_P
+	ADD -> RAM # x + 2
+	1 -> RAM_P
+	:while_loop13 -> RAM
+	2 -> RAM_P
+	:while_loop13 -> RAM
+;while_end13
+	7 -> RAM_P # '\n'
+	10 -> RAM
+	21 -> RAM_P
+	RAM -> A
+	0 -> B
+	8 -> RAM_P # y
+	ADD -> RAM
+	9 -> RAM_P # 2
+	2 -> RAM
+	8 -> RAM_P
+	RAM -> B # RES1 -> B
+	9 -> RAM_P
+	RAM -> A # RES2 -> A
+	21 -> RAM_P
+	ADD -> RAM # y + 2
+	1 -> RAM_P
+	:while_loop11 -> RAM
+	2 -> RAM_P
+	:while_loop11 -> RAM
+;while_end11
