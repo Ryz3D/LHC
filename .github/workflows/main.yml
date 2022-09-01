@@ -1,4 +1,4 @@
-# Uploads artifacts built with g++
+# Uploads g++ build for linux
 
 name: CI
 
@@ -10,11 +10,6 @@ on:
 
   workflow_dispatch:
 
-env:
-  MSYSTEM: MINGW32
-  MSYS2_PATH_TYPE: inherit
-  SCHEME: scheme
-
 jobs:
   build_ubuntu:
     runs-on: ubuntu-latest
@@ -23,28 +18,10 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Linux build
-        run: make
-
-      - name: Remove extension
-        run: mv lhc.exe lhc
+        run: g++ -O3 -o lhc.exe src/*.cpp src/**/*.cpp
 
       - name: Upload
         uses: actions/upload-artifact@v3.1.0
         with:
           name: LHC Linux
           path: lhc
-
-  build_windows:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Windows build
-        run: make
-
-      - name: Upload
-        uses: actions/upload-artifact@v3.1.0
-        with:
-          name: LHC Windows
-          path: lhc.exe
