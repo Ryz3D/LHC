@@ -11,11 +11,11 @@ _(actually)_
 
 - Parsing .c files
 - Basic variables (`uint_8`, `int_8`, `bool`)
-  - All variables are treated as global for now
+  - All variables are treated as global
 - Operators
   - `+`, `-`, `*`, `/` also as assignment: `+=`, `-=`, `*=`, `/=` and `++`, `--`
   - `<`, `>`, `<=`, `>=`, `==`, `!=`, `||`, `&&`
-- `if` by conditional jumps
+- `if` and `else` by conditional jumps
 - `while` by conditional and fixed jumps
 - `for` by transformation to `while`
 - Basic functions
@@ -31,7 +31,6 @@ _(actually)_
 ## TO-DO
 
 - Division/modulo by zero handler
-- Handle `else` by jumping past by default
 - Multi-byte types
 - Native `print_uint` function > 127
 
