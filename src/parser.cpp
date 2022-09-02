@@ -76,7 +76,21 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                                 Parser::find_end(str, &i);
                                 std::string body = str.substr(start, i - start - 1);
 
-                                IfStatement *statement = new IfStatement("if (" + args + ") {" + body + "}");
+                                std::string body_else = "";
+                                while (CHAR_IS_EMPTY(str[i]) && i < str.size() - 1)
+                                    i++;
+                                if (str.substr(i, 4) == "else")
+                                {
+                                    while (str[i] != '{' && i < str.size() - 1)
+                                        i++;
+                                    start = ++i;
+                                    Parser::find_end(str, &i);
+                                    body_else = str.substr(start, i - start - 1);
+                                }
+                                else
+                                    i--;
+
+                                IfStatement *statement = new IfStatement("if (" + args + ") {" + body + "}" + (body_else.empty() ? "" : (" else {" + body_else + "}")));
                                 statement->condition = new ExpressionToken(args);
                                 err_parse err = Parser::parse(args, &statement->condition->content, parser_state::PARSE_EXPRESSION);
                                 if (err != err_parse::PARSE_SUCCESS)
@@ -84,6 +98,12 @@ err_parse Parser::parse(std::string str_in, std::vector<Token *> *buffer, parser
                                 err = Parser::parse(body, &statement->body, parser_state::PARSE_STATEMENT);
                                 if (err != err_parse::PARSE_SUCCESS)
                                     return err;
+                                if (!body_else.empty())
+                                {
+                                    err = Parser::parse(body_else, &statement->body_else, parser_state::PARSE_STATEMENT);
+                                    if (err != err_parse::PARSE_SUCCESS)
+                                        return err;
+                                }
                                 buffer->push_back(statement);
                             }
                             else if (token_buffer == "while")

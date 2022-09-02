@@ -28,6 +28,28 @@ void LiteralString::resolve()
         return;
     }
     data = raw.substr(1, raw.size() - 2);
+    for (size_t i = 0; i < data.size(); i++)
+    {
+        std::string sub = data.substr(i, 2);
+        bool changed = true;
+        if (sub == "\\\"")
+            data[i] = '\"';
+        else if (sub == "\\")
+            data[i] = '\\';
+        else if (sub == "\\0")
+            data[i] = '\0';
+        else if (sub == "\\n")
+            data[i] = '\n';
+        else if (sub == "\\r")
+            data[i] = '\r';
+        else if (sub == "\\t")
+            data[i] = '\t';
+        else
+            changed = false;
+
+        if (changed)
+            data.erase(data.begin() + i + 1);
+    }
 
     resolved = true;
 }

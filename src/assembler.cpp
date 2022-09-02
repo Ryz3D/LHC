@@ -449,7 +449,7 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             }
             else if (call->func_name == "print_int")
             {
-                std::string l_return = "return" + std::to_string(label_counter);
+                std::string l_return = "return" + std::to_string(label_counter++);
                 err_compile err = Assembler::evaluate_exp(exp, vars, buffer, print_int_i->ram_location);
                 if (err != err_compile::COMPILE_SUCCESS)
                     return err;
@@ -482,7 +482,8 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
         }
         else if (dynamic_cast<IfStatement *>(tokens[i]) != nullptr)
         {
-            std::string l_if = "if" + std::to_string(label_counter++);
+            std::string l_if = "if" + std::to_string(label_counter);
+            std::string l_end = "if_end" + std::to_string(label_counter++);
             IfStatement *statement = dynamic_cast<IfStatement *>(tokens[i]);
             Assembler::evaluate_exp(statement->condition, vars, buffer, exp_res->ram_location);
             // get expression result, subtract 1
@@ -500,7 +501,24 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             if (err != err_compile::COMPILE_SUCCESS)
                 return err;
 
+            if (!statement->body_else.empty())
+            {
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_end));
+            }
+
             buffer->push_back(new Instruction(l_if));
+
+            if (!statement->body_else.empty())
+            {
+                err_compile err = Assembler::compile_statements(statement->body_else, vars, buffer, false);
+                if (err != err_compile::COMPILE_SUCCESS)
+                    return err;
+
+                buffer->push_back(new Instruction(l_end));
+            }
         }
         else if (dynamic_cast<WhileLoop *>(tokens[i]) != nullptr)
         {
@@ -656,21 +674,28 @@ err_compile Assembler::compile(std::vector<Token *> tokens, std::vector<Instruct
     if (Assembler::def_print_int)
     {
         std::string src_print_int = " \
-print_int_a = print_int_i; \
-if (print_int_a < 0) { \
-    putchar('-'); \
-    print_int_a = 0 - print_int_i; \
+if (print_int_i == 0) \
+{ \
+    putchar('0'); \
 } \
-print_int_c = 0; \
-for (print_int_b = print_int_a; print_int_b > 0; print_int_b /= 10) { \
-    print_int_c++; \
-} \
-for (print_int_d = print_int_c - 1; print_int_d >= 0; print_int_d--) { \
-    print_int_f = print_int_a; \
-    for (print_int_e = 0; print_int_e < print_int_d; print_int_e++) { \
-        print_int_f /= 10; \
+else \
+{ \
+    print_int_a = print_int_i; \
+    if (print_int_a < 0) { \
+        putchar('-'); \
+        print_int_a = 0 - print_int_i; \
     } \
-    putchar('0' + print_int_f % 10); \
+    print_int_c = 0; \
+    for (print_int_b = print_int_a; print_int_b > 0; print_int_b /= 10) { \
+        print_int_c++; \
+    } \
+    for (print_int_d = print_int_c - 1; print_int_d >= 0; print_int_d--) { \
+        print_int_f = print_int_a; \
+        for (print_int_e = 0; print_int_e < print_int_d; print_int_e++) { \
+            print_int_f /= 10; \
+        } \
+        putchar('0' + print_int_f % 10); \
+    } \
 } \
 ";
 
