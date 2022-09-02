@@ -28,6 +28,7 @@ I fully intend to build a machine capable of executing the generated binaries in
 
 ## TO-DO
 
+- Paranthesis in expression
 - Division/modulo by zero handler
 - Multi-byte types
 - Native `print_uint` function > 127
