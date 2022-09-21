@@ -26,7 +26,7 @@ _(actually)_
 - Custom CPU simulator (and brainfuck, just for fun)
 - Output, parse and execute custom assembly
   - Can be used as an assembly debugger/simulator and assembly->binary converter
-- Output as binary (for flash memory and LogiSim)
+- Output as binary and Logisim image
 
 ## TO-DO
 

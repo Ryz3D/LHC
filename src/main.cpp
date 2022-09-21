@@ -7,10 +7,10 @@
 #include "parser.h"
 #include "assembler.h"
 #include "sim.h"
+#include "img.h"
 
 /*
 TODO:
- - FIX FROM_ASS
  - binary input for sim
  - signed comparisons
  - return value from calltoken
@@ -38,6 +38,7 @@ void help()
     std::cout << "\tOutput:" << std::endl;
     std::cout << "\t\t-oa [path] Assembly file" << std::endl;
     std::cout << "\t\t-ob [path] Binary file" << std::endl;
+    std::cout << "\t\t-oi [path] Logisim image" << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
     std::string in_ass = "";
     std::string out_ass = "";
     std::string out_bin = "";
+    std::string out_img = "";
     for (int i = 0; i < argc; i++)
     {
         std::string a = std::string(argv[i]);
@@ -77,35 +79,37 @@ int main(int argc, char *argv[])
             out_ass = argv[i + 1];
         else if (a == "-ob" && i < argc - 1)
             out_bin = argv[i + 1];
+        else if (a == "-oi" && i < argc - 1)
+            out_img = argv[i + 1];
     }
 
     std::vector<Instruction *> program = {};
 
-    if (in_c.size() > 0)
+    if (!in_c.empty())
     {
         std::vector<Token *> tokens = {};
         err_parse err1 = Parser::parse(FS::read_file(in_c), &tokens);
         if (err1 != err_parse::PARSE_SUCCESS)
         {
-            std::cout << "ERROR: Failed at parse (" << err1 << ")" << std::endl;
+            std::cout << "ERROR: Failed parse (" << err1 << ")" << std::endl;
             return err1;
         }
 
         err_resolve err2 = Parser::resolve(tokens);
         if (err2 != err_resolve::RESOLVE_SUCCESS)
         {
-            std::cout << "ERROR: Failed at resolve (" << err2 << ")" << std::endl;
+            std::cout << "ERROR: Failed resolve (" << err2 << ")" << std::endl;
             return err2;
         }
 
         err_compile err3 = Assembler::compile(tokens, &program);
         if (err3 != err_compile::COMPILE_SUCCESS)
         {
-            std::cout << "ERROR: Failed at compile (" << err3 << ")" << std::endl;
+            std::cout << "ERROR: Failed compile (" << err3 << ")" << std::endl;
             return err3;
         }
     }
-    else if (in_ass.size() > 0)
+    else if (!in_ass.empty())
         program = Assembler::parse_ass(FS::read_file(in_ass));
     else
     {
@@ -127,10 +131,15 @@ int main(int argc, char *argv[])
         return err4;
     }
 
-    if (out_ass.size() > 0)
+    if (!out_ass.empty())
         FS::write_file(out_ass, Assembler::to_ass(program));
-    if (out_bin.size() > 0)
+    if (!out_bin.empty())
         FS::write_file(out_bin, binary);
+    if (!out_img.empty())
+    {
+        FS::write_file(out_img + "1", Img::bin_to_img(binary, false));
+        FS::write_file(out_img + "2", Img::bin_to_img(binary, true));
+    }
 
     if (sim_steps > 0)
     {
