@@ -7,15 +7,13 @@ I fully intend to build a machine capable of executing the generated binaries in
 
 ## Implemented
 
-_(actually)_
-
 - Parsing .c files
 - Basic variables (`uint_8`, `int_8`, `bool`)
-  - All variables are treated as global for now
+  - All variables are treated as global
 - Operators
   - `+`, `-`, `*`, `/` also as assignment: `+=`, `-=`, `*=`, `/=` and `++`, `--`
   - `<`, `>`, `<=`, `>=`, `==`, `!=`, `||`, `&&`
-- `if` by conditional jumps
+- `if` and `else` by conditional jumps
 - `while` by conditional and fixed jumps
 - `for` by transformation to `while`
 - Basic functions
@@ -30,19 +28,10 @@ _(actually)_
 
 ## TO-DO
 
+- Paranthesis in expression
 - Division/modulo by zero handler
-- Handle `else` by jumping past by default
 - Multi-byte types
 - Native `print_uint` function > 127
-
-## Planned
-
-- Other types, at least integers (8-32bit + signed `int`s)
-- Simple optimizations on assembly
-  - Setting `RAM_P` multiple times before accessing RAM
-  - No bus-reads -> nop
-  - Only set upper instruction pointer byte if neccessary (Check location of jump instruction)
-  - Check if register is already set to literal values
 
 ## _(notes for version two)_
 
@@ -50,7 +39,7 @@ _(actually)_
   - Only keywords, names and symbols
   - ExpressionToken is useless
   - Use `struct` for Token types
-    - I could write it in C...
+    - ~I could write it in C...~ **don't**
 - Proper error messages (show problematic line/keyword)
 - Proper functions
   - Heap, stack
