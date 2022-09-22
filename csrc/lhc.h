@@ -23,4 +23,5 @@ void print_uint(int i)
 
 void print_int(int i)
 {
+    printf("%i", i);
 }

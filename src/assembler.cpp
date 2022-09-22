@@ -738,7 +738,6 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
 
     std::vector<std::string> labels = {};
     std::vector<uint16_t> label_positions = {};
-    uint16_t ip = 0;
     for (size_t i = 0; i < program.size(); i++)
     {
         if (program[i]->label.size() > 0)
@@ -747,10 +746,8 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
                 if (program[i]->label == labels[j])
                     return err_assemble::ASSEMBLE_REDEF_LABEL;
             labels.push_back(program[i]->label);
-            label_positions.push_back(ip);
+            label_positions.push_back(i);
         }
-        else
-            ip++;
     }
 
     for (size_t i = 0; i < program.size(); i++)
@@ -775,10 +772,10 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
             {
                 if (program[i]->label_literal == labels[j])
                 {
-                    if (ram_p == 0x01 || ram_p == 0x03)
-                        ip_literal = label_positions[j] >> 8;
-                    else
+                    if (ram_p % 2 == 0)
                         ip_literal = label_positions[j] & 0xFF;
+                    else
+                        ip_literal = label_positions[j] >> 8;
                     found = true;
                     break;
                 }
@@ -795,6 +792,18 @@ err_assemble Assembler::assemble(std::vector<Instruction *> program, std::vector
             buffer->push_back((uint8_t)program[i]->literal);
         }
     }
+
+    uint32_t end = buffer->size() / 2;
+    buffer->push_back(0);
+    buffer->push_back(0);
+    buffer->push_back(1 << INS_RAM_P_IN);
+    buffer->push_back(1);
+    buffer->push_back(1 << INS_RAM_IN);
+    buffer->push_back(end >> 8);
+    buffer->push_back(1 << INS_RAM_P_IN);
+    buffer->push_back(2);
+    buffer->push_back(1 << INS_RAM_IN);
+    buffer->push_back(end & 0xFF);
 
     for (size_t i = 0; i < buffer->size(); i += 2)
     {
