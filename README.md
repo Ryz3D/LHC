@@ -3,7 +3,7 @@
 [![CI](https://github.com/Ryz3D/LHC/actions/workflows/main.yml/badge.svg)](https://github.com/Ryz3D/LHC/actions/workflows/main.yml)
 
 This project generates assembly and machine code for a little computer with a very limited instruction set. As a source it targets a subset of C, so any program can also be compiled using gcc and run on a _proper_ computer and hopefully that yields the same result.
-I fully intend to build a machine capable of executing the generated binaries in hardware, but time will tell if I'm actually able to.
+I fully intend to build [a machine](https://github.com/Ryz3D/SPEAR) capable of executing the generated binaries in hardware, but time will tell if I'm actually able to.
 
 ## Implemented
 
