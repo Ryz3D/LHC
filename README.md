@@ -21,9 +21,10 @@ I fully intend to build [a machine](https://github.com/Ryz3D/SPEAR) capable of e
   - `getchar` reads from RAM 0x07
   - `printf` for string literal only
   - `print_int` for printing signed numbers
+  - `delay` keeps CPU busy for specified number of clock cycles
 - Custom CPU simulator (and brainfuck, just for fun)
 - Output, parse and execute custom assembly
-  - Can be used as an assembly debugger/simulator and assembly->binary converter
+  - Can be used as an assembly debugger/simulator and assembly-to-binary converter
 - Output as binary and Logisim image
 
 ## TO-DO
