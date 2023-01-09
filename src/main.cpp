@@ -11,7 +11,6 @@
 
 /*
 TODO:
- - binary input for sim
  - signed comparisons
  - return value from calltoken
 
@@ -21,8 +20,6 @@ TODO:
  ABOVE ARE APPLIED WHEN LOWER (LAST) BYTE IS SET
 0x05/0x06 return address
 0x07 putchar/getchar IO
-
-NOR first few RAM_P bits for RAM_CE
 */
 
 void help()

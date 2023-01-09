@@ -25,3 +25,11 @@ void print_int(int i)
 {
     printf("%i", i);
 }
+
+void delay(int n)
+{
+    for (int i = 0; i < n; i++)
+    {
+        (void)0;
+    }
+}

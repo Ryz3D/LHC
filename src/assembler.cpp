@@ -1,9 +1,7 @@
 #include "assembler.h"
 
 bool Assembler::def_print_int = true;
-bool Assembler::def_mul = true;
-bool Assembler::def_div = true;
-bool Assembler::def_mod = true;
+bool Assembler::def_delay = true;
 uint32_t Assembler::label_counter = 0;
 
 Variable::Variable(lhc_type var_type, std::string var_name, uint32_t ram_location)
@@ -372,8 +370,6 @@ err_compile Assembler::evaluate_exp(ExpressionToken *exp, std::vector<Variable *
             std::cout << "Can't evaluate \"" << exp->content[0]->raw << "\" (yet)" << std::endl;
     }
 
-    // TODO: iterate with known values (i.e. A, B, RAM_P) to remove redundant instructions
-
     return err_compile::COMPILE_SUCCESS;
 }
 
@@ -383,7 +379,12 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
         return err_compile::COMPILE_UNRESOLVED;
 
     Variable *exp_res = Assembler::find_var("exp_res_0", vars);
-    Variable *print_int_i = Assembler::find_var("print_int_i", vars);
+    Variable *print_int_i = nullptr;
+    if (def_print_int)
+        print_int_i = Assembler::find_var("print_int_i", vars);
+    Variable *delay_num = nullptr;
+    if (def_delay)
+        delay_num = Assembler::find_var("delay_num", vars);
 
     for (size_t i = 0; i < tokens.size(); i++)
     {
@@ -449,22 +450,85 @@ err_compile Assembler::compile_statements(std::vector<Token *> tokens, std::vect
             }
             else if (call->func_name == "print_int")
             {
-                std::string l_return = "return" + std::to_string(label_counter++);
-                err_compile err = Assembler::evaluate_exp(exp, vars, buffer, print_int_i->ram_location);
-                if (err != err_compile::COMPILE_SUCCESS)
-                    return err;
+                if (!def_print_int)
+                {
+                    std::cout << "WARNING: " << call->func_name << " call ignored" << std::endl;
+                }
+                else
+                {
+                    std::string l_return = "return" + std::to_string(label_counter++);
+                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, print_int_i->ram_location);
+                    if (err != err_compile::COMPILE_SUCCESS)
+                        return err;
 
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x05));
-                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
-                buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x05));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x06));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_return));
 
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
-                buffer->push_back(new Instruction(1 << INS_RAM_IN, "print_int"));
-                buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
-                buffer->push_back(new Instruction(1 << INS_RAM_IN, "print_int"));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x01));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, "print_int"));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x02));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, "print_int"));
 
-                buffer->push_back(new Instruction(l_return));
+                    buffer->push_back(new Instruction(l_return));
+                }
+            }
+            else if (call->func_name == "delay")
+            {
+                // TODO: delay1000 for *1000 cycles
+
+                bool handled = false;
+                if (exp->content.size() == 1)
+                {
+                    LiteralInt *lit_int = dynamic_cast<LiteralInt *>(exp->content[0]);
+                    if (lit_int != nullptr)
+                    {
+                        handled = true;
+
+                        lit_int->resolve();
+                        if (lit_int->data < 15)
+                        {
+                            for (uint8_t delay_i = 0; delay_i < lit_int->data; delay_i++)
+                            {
+                                buffer->push_back(new Instruction(0, 0));
+                            }
+                        }
+                        else
+                        {
+                            std::string l_delay_loop = "delay_loop" + std::to_string(label_counter++);
+                            buffer->push_back(new Instruction(1 << INS_A_IN, -lit_int->data / 5 + 1));
+                            buffer->push_back(new Instruction(1 << INS_B_IN, 1));
+                            buffer->push_back(new Instruction(l_delay_loop));
+                            buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN));
+                            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_delay_loop));
+                            buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                            buffer->push_back(new Instruction(1 << INS_RAM_IN, l_delay_loop));
+                            for (uint8_t delay_i = 0; delay_i < lit_int->data % 5; delay_i++)
+                            {
+                                buffer->push_back(new Instruction(0, 0));
+                            }
+                        }
+                    }
+                }
+                if (!handled)
+                {
+                    err_compile err = Assembler::evaluate_exp(exp, vars, buffer, delay_num->ram_location);
+                    if (err != err_compile::COMPILE_SUCCESS)
+                        return err;
+
+                    std::string l_delay_loop = "delay_loop" + std::to_string(label_counter++);
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, delay_num->ram_location));
+                    buffer->push_back(new Instruction(1 << INS_RAM_OUT | 1 << INS_A_IN));
+                    buffer->push_back(new Instruction(1 << INS_B_IN, 5));
+                    buffer->push_back(new Instruction(l_delay_loop));
+                    buffer->push_back(new Instruction(1 << INS_ALU_ADD | 1 << INS_A_IN));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x03));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_delay_loop));
+                    buffer->push_back(new Instruction(1 << INS_RAM_P_IN, 0x04));
+                    buffer->push_back(new Instruction(1 << INS_RAM_IN, l_delay_loop));
+                }
             }
             else
                 return err_compile::COMPILE_UNDEF_FUNC;
