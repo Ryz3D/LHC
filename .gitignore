@@ -1,2 +1,5 @@
 /lhc.exe
 /lhc_debug.exe
+ass/*.*
+img/*.*
+bin/*.*
